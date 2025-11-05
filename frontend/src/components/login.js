@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { Form, Button, Alert, Spinner } from "react-bootstrap";
+import { useState } from "react";
+import { Form, Button, Alert, Spinner, Card, Row, Col } from "react-bootstrap";
 import { useNavigate, Link } from "react-router-dom";
+import { LogIn, Shield, Mail, Lock } from "lucide-react";
 import API from "../api/api";
 
 function Login() {
@@ -34,66 +35,107 @@ function Login() {
   };
 
   return (
-    <div className="container mt-4" style={{ maxWidth: "500px" }}>
-      <h3 className="mb-4 text-center fw-bolder">User Login</h3>
+    <div className="min-vh-100 d-flex align-items-center bg-light">
+      <div className="container">
+        <Row className="justify-content-center">
+          <Col lg={5} md={7}>
+            <div className="text-center mb-4">
+              <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                <Shield className="text-primary" size={40} />
+              </div>
+              <h2 className="fw-bold text-dark">SSL Security Analysis</h2>
+              <p className="text-muted">Sign in to your account</p>
+            </div>
 
-      {message.text && <Alert variant={message.type}>{message.text}</Alert>}
+            <Card className="shadow border-0">
+              <Card.Body className="p-4">
+                {message.text && (
+                  <Alert variant={message.type} className="mb-4">
+                    {message.text}
+                  </Alert>
+                )}
 
-      <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3">
-          <Form.Label>Email Address</Form.Label>
-          <Form.Control
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter email"
-            required
-          />
-        </Form.Group>
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-semibold">
+                      <Mail size={16} className="me-2" />
+                      Email Address
+                    </Form.Label>
+                    <Form.Control
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email"
+                      size="lg"
+                      required
+                    />
+                  </Form.Group>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter password"
-            required
-          />
-        </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-semibold">
+                      <Lock size={16} className="me-2" />
+                      Password
+                    </Form.Label>
+                    <Form.Control
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Enter your password"
+                      size="lg"
+                      required
+                    />
+                  </Form.Group>
 
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <Link
-            to="/forgot-password"
-            className="text-decoration-underline text-light"
-          >
-            Forgot Password?
-          </Link>
-        </div>
+                  <div className="d-flex justify-content-end mb-3">
+                    <Link
+                      to="/forgot-password"
+                      className="text-primary text-decoration-none"
+                    >
+                      Forgot Password?
+                    </Link>
+                  </div>
 
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={loading}
-          className="w-100"
-        >
-          {loading ? <Spinner animation="border" size="sm" /> : "Login"}
-        </Button>
+                  <div className="d-grid">
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      disabled={loading}
+                      size="lg"
+                      className="fw-semibold"
+                    >
+                      {loading ? (
+                        <>
+                          <Spinner animation="border" size="sm" className="me-2" />
+                          Signing in...
+                        </>
+                      ) : (
+                        <>
+                          <LogIn size={18} className="me-2" />
+                          Sign In
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </Form>
 
-        <div className="text-center mt-3">
-          <small>
-            New user?{" "}
-            <Link
-              to="/register"
-              className="text-decoration-underline text-light"
-            >
-              Register here
-            </Link>
-          </small>
-        </div>
-      </Form>
+                <hr className="my-4" />
+
+                <div className="text-center">
+                  <span className="text-muted">Don't have an account? </span>
+                  <Link
+                    to="/register"
+                    className="text-primary text-decoration-none fw-semibold"
+                  >
+                    Create Account
+                  </Link>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 }

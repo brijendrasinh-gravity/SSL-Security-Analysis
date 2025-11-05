@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { Form, Button, Alert, Spinner } from "react-bootstrap";
+import { useState } from "react";
+import { Form, Button, Alert, Spinner, Card, Row, Col } from "react-bootstrap";
+import { useNavigate, Link } from "react-router-dom";
+import { Mail, Shield, ArrowLeft, Send } from "lucide-react";
 import API from "../../api/api";
-import { useNavigate } from "react-router-dom";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -36,28 +37,98 @@ function ForgotPassword() {
   };
 
   return (
-    <div className="container mt-5 col-md-6">
-      <div className="card shadow p-4">
-        <h3 className="text-center mb-4">Forgot Password</h3>
-        {message && <Alert variant="success">{message}</Alert>}
-        {error && <Alert variant="danger">{error}</Alert>}
+    <div className="min-vh-100 d-flex align-items-center bg-light">
+      <div className="container">
+        <Row className="justify-content-center">
+          <Col lg={5} md={7}>
+            <div className="text-center mb-4">
+              <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                <Shield className="text-primary" size={40} />
+              </div>
+              <h2 className="fw-bold text-dark">SSL Security Analysis</h2>
+              <p className="text-muted">Reset your password</p>
+            </div>
 
-        <Form onSubmit={handleSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Label>Enter your registered Email</Form.Label>
-            <Form.Control
-              type="email"
-              value={email}
-              placeholder="Enter email"
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </Form.Group>
+            <Card className="shadow border-0">
+              <Card.Body className="p-4">
+                <div className="mb-4">
+                  <Link
+                    to="/login"
+                    className="text-primary text-decoration-none d-inline-flex align-items-center"
+                  >
+                    <ArrowLeft size={16} className="me-2" />
+                    Back to Sign In
+                  </Link>
+                </div>
 
-          <Button variant="primary" type="submit" disabled={loading} className="w-100">
-            {loading ? <Spinner size="sm" animation="border" /> : "Send OTP"}
-          </Button>
-        </Form>
+                {message && (
+                  <Alert variant="success" className="mb-4">
+                    {message}
+                  </Alert>
+                )}
+                {error && (
+                  <Alert variant="danger" className="mb-4">
+                    {error}
+                  </Alert>
+                )}
+
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-semibold">
+                      <Mail size={16} className="me-2" />
+                      Email Address
+                    </Form.Label>
+                    <Form.Control
+                      type="email"
+                      value={email}
+                      placeholder="Enter your registered email"
+                      onChange={(e) => setEmail(e.target.value)}
+                      size="lg"
+                      required
+                    />
+                    <Form.Text className="text-muted">
+                      We'll send a verification code to this email address
+                    </Form.Text>
+                  </Form.Group>
+
+                  <div className="d-grid">
+                    <Button
+                      variant="primary"
+                      type="submit"
+                      disabled={loading}
+                      size="lg"
+                      className="fw-semibold"
+                    >
+                      {loading ? (
+                        <>
+                          <Spinner animation="border" size="sm" className="me-2" />
+                          Sending OTP...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={18} className="me-2" />
+                          Send OTP
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </Form>
+
+                <hr className="my-4" />
+
+                <div className="text-center">
+                  <span className="text-muted">Remember your password? </span>
+                  <Link
+                    to="/login"
+                    className="text-primary text-decoration-none fw-semibold"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </div>
     </div>
   );

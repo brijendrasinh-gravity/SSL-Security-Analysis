@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { Card, Spinner, Button, Alert, Form } from "react-bootstrap";
+import { useEffect, useState } from "react";
+import { Card, Spinner, Button, Alert, Form, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { User, Mail, Phone, FileText, Calendar, Lock, Save, Shield } from "lucide-react";
 import API from "../api/api";
-import BackButton from "./common/backbutton";
 
 function Profile() {
   const [user, setUser] = useState(null);
@@ -105,107 +105,156 @@ function Profile() {
   }
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-end mb-3">
-        <BackButton label="Back" variant="dark" />
+    <div className="container mt-4" style={{ maxWidth: "900px" }}>
+      <div className="text-center mb-4">
+        <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+          <Shield className="text-primary" size={40} />
+        </div>
+        <h2 className="fw-bold">My Profile</h2>
+        <p className="text-muted">Manage your account information</p>
       </div>
 
-      <Card className="p-4 shadow-sm">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4 className="fw-bold mb-0">My Profile</h4>
-        </div>
+      <Row>
+        <Col lg={4} className="mb-4">
+          <Card className="shadow-sm border-0 text-center">
+            <Card.Body className="p-4">
+              <div 
+                className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3"
+                style={{ width: '100px', height: '100px', fontSize: '36px', fontWeight: '600' }}
+              >
+                {user.user_name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <h5 className="fw-bold mb-1">{user.user_name || "User"}</h5>
+              <p className="text-muted small mb-3">{user.email || ""}</p>
+              <div className="d-flex align-items-center justify-content-center text-muted small">
+                <Calendar size={14} className="me-2" />
+                <span>
+                  Member since {user.createdAt 
+                    ? new Date(user.createdAt).toLocaleDateString("en-US", { 
+                        month: "short", 
+                        year: "numeric" 
+                      })
+                    : "N/A"}
+                </span>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
 
-        {message && <Alert variant="success">{message}</Alert>}
-        {error && <Alert variant="danger">{error}</Alert>}
-
-        <Form onSubmit={handleUpdate}>
-          <Form.Group className="mb-3">
-            <Form.Label>Username</Form.Label>
-            <Form.Control
-              type="text"
-              name="user_name"
-              value={user.user_name || ""}
-              onChange={handleChange}
-              placeholder="Enter your name"
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Email</Form.Label>
-            <Form.Control
-              type="email"
-              value={user.email || ""}
-              // disabled
-              readOnly
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Phone Number</Form.Label>
-            <Form.Control
-              type="text"
-              name="phone_number"
-              value={user.phone_number || ""}
-              onChange={handleChange}
-              placeholder="Enter your phone number"
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Description</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              name="description"
-              value={user.description || ""}
-              onChange={handleChange}
-              placeholder="Tell us something about yourself"
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Member Since</Form.Label>
-            <Form.Control
-              type="text"
-              value={
-                user.createdAt
-                  ? new Date(user.createdAt).toLocaleString("en-IN", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })
-                  : "N/A"
-              }
-              readOnly
-              disabled
-            />
-          </Form.Group>
-
-          <div className="d-flex justify-content-between align-items-center mt-4">
-            <Button
-              type="submit"
-              variant="success"
-              disabled={saving}
-              className="px-4"
-            >
-              {saving ? (
-                <>
-                  <Spinner animation="border" size="sm" /> Updating...
-                </>
-              ) : (
-                "Update Profile"
+        <Col lg={8}>
+          <Card className="shadow-sm border-0">
+            <Card.Body className="p-4">
+              {message && (
+                <Alert variant="success" className="mb-4">
+                  {message}
+                </Alert>
               )}
-            </Button>
+              {error && (
+                <Alert variant="danger" className="mb-4">
+                  {error}
+                </Alert>
+              )}
 
-            <Button
-              variant="warning"
-              onClick={() => navigate("/change-password")}
-              className="px-4"
-            >
-              Change Password
-            </Button>
-          </div>
-        </Form>
-      </Card>
+              <Form onSubmit={handleUpdate}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">
+                    <User size={16} className="me-2" />
+                    Username
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="user_name"
+                    value={user.user_name || ""}
+                    onChange={handleChange}
+                    placeholder="Enter your name"
+                    size="lg"
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">
+                    <Mail size={16} className="me-2" />
+                    Email Address
+                  </Form.Label>
+                  <Form.Control
+                    type="email"
+                    value={user.email || ""}
+                    readOnly
+                    size="lg"
+                    className="bg-light"
+                  />
+                  <Form.Text className="text-muted">
+                    Email cannot be changed
+                  </Form.Text>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">
+                    <Phone size={16} className="me-2" />
+                    Phone Number
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="phone_number"
+                    value={user.phone_number || ""}
+                    onChange={handleChange}
+                    placeholder="Enter your phone number"
+                    size="lg"
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-4">
+                  <Form.Label className="fw-semibold">
+                    <FileText size={16} className="me-2" />
+                    Description
+                  </Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={4}
+                    name="description"
+                    value={user.description || ""}
+                    onChange={handleChange}
+                    placeholder="Tell us something about yourself"
+                    size="lg"
+                  />
+                </Form.Group>
+
+                <div className="d-flex gap-3">
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={saving}
+                    size="lg"
+                    className="fw-semibold flex-grow-1"
+                  >
+                    {saving ? (
+                      <>
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={18} className="me-2" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => navigate("/change-password")}
+                    size="lg"
+                    className="fw-semibold"
+                  >
+                    <Lock size={18} className="me-2" />
+                    Change Password
+                  </Button>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 }

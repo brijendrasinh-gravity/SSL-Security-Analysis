@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, Tabs, Tab, Table, Badge } from "react-bootstrap";
+import { Server, FileText, Shield, CheckCircle, XCircle } from "lucide-react";
 
 function SSLDetailsAnalysis({ result }) {
   const [activeTab, setActiveTab] = useState("endpoints");
@@ -8,8 +9,14 @@ function SSLDetailsAnalysis({ result }) {
   const certs = result?.ssllabs?.certs || [];
 
   return (
-    <Card className="p-4 mt-4 shadow-sm">
-      <h5 className="mb-3">SSL Details Analysis</h5>
+    <Card className="shadow-sm border-0 mt-4">
+      <Card.Body className="p-4">
+        <div className="d-flex align-items-center mb-4">
+          <div className="bg-info bg-opacity-10 rounded d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+            <Server className="text-info" size={20} />
+          </div>
+          <h5 className="fw-bold mb-0">SSL Details Analysis</h5>
+        </div>
 
       <Tabs
         id="ssl-details-tabs"
@@ -20,177 +27,136 @@ function SSLDetailsAnalysis({ result }) {
         variant="pills"
       >
         {/* ENDPOINTS part */}
-        <Tab eventKey="endpoints" title="Endpoints"
-        style={{
-          maxHeight:'560px',
-          overflowY:'auto',
-          overflowX:'hidden',
+        <Tab eventKey="endpoints" title="Endpoints">
+          <div style={{ maxHeight: '560px', overflowY: 'auto' }} className="mt-3">
+            {endpoints.length > 0 ? (
+              endpoints.map((endpoint, index) => (
+                <Card key={index} className="border-0 bg-light p-3 mb-3">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <Badge bg="secondary" className="px-3 py-2 me-2">
+                        {endpoint.ipAddress || "N/A"}
+                      </Badge>
+                      <span className="fw-semibold">{endpoint.serverName || "Unknown Server"}</span>
+                    </div>
+                    <Badge
+                      bg={
+                        endpoint.grade === "A" || endpoint.grade === "A+"
+                          ? "success"
+                          : endpoint.grade === "B"
+                          ? "primary"
+                          : endpoint.grade === "C"
+                          ? "warning"
+                          : "danger"
+                      }
+                      className="px-3 py-2"
+                    >
+                      Grade: {endpoint.grade || "N/A"}
+                    </Badge>
+                  </div>
 
-        }}
-        >
-          {endpoints.length > 0 ? (
-            
-            endpoints.map((endpoint, index) => (
-              <Card key={index} className="p-3 mb-3 border rounded shadow-sm">
-                <h6 className="mb-3">
-                  <Badge bg="secondary" className="me-2">
-                    {endpoint.ipAddress || "N/A"}
-                  </Badge>
-                  {endpoint.serverName || "Unknown Server"}
-                </h6>
-
-                <Table borderless hover responsive className="mb-0">
-                  <tbody>
-                    <tr>
-                      <td>
-                        <strong>Grade</strong>
-                      </td>
-                      <td>
-                        <Badge
-                          bg={
-                            endpoint.grade === "A"
-                              ? "success"
-                              : endpoint.grade === "B"
-                              ? "warning"
-                              : "danger"
-                          }
-                        >
-                          {endpoint.grade || "N/A"}
-                        </Badge>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Status</strong>
-                      </td>
-                      <td>{endpoint.statusMessage || "N/A"}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Protocol Support</strong>
-                      </td>
-                      <td>
-                        {endpoint.details?.protocols
-                          ?.map((p) => `${p.name} ${p.version}`)
-                          .join(", ") || "N/A"}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Forward Secrecy</strong>
-                      </td>
-                      <td>
-                        {endpoint.details?.forwardSecrecy &&
-                        endpoint.details?.forwardSecrecy >= 2
-                          ? "Supported"
-                          : "Not Supported"}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>OCSP Stapling</strong>
-                      </td>
-                      <td>
-                        {endpoint.details?.ocspStapling
-                          ? "Enabled"
-                          : "Disabled"}
-                      </td>
-                    </tr>
-                  </tbody>
-                </Table>
-              </Card>
-            ))
-            
-          ) : (
-            <p>No endpoint data found.</p>
-          )}
+                  <Table className="mb-0">
+                    <tbody>
+                      <tr className="border-bottom">
+                        <td className="py-2 text-muted">Status</td>
+                        <td className="py-2 fw-semibold">{endpoint.statusMessage || "N/A"}</td>
+                      </tr>
+                      <tr className="border-bottom">
+                        <td className="py-2 text-muted">Protocol Support</td>
+                        <td className="py-2 fw-semibold">
+                          {endpoint.details?.protocols
+                            ?.map((p) => `${p.name} ${p.version}`)
+                            .join(", ") || "N/A"}
+                        </td>
+                      </tr>
+                      <tr className="border-bottom">
+                        <td className="py-2 text-muted">Forward Secrecy</td>
+                        <td className="py-2">
+                          <Badge bg={endpoint.details?.forwardSecrecy >= 2 ? "success" : "danger"}>
+                            {endpoint.details?.forwardSecrecy >= 2 ? "Supported" : "Not Supported"}
+                          </Badge>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 text-muted">OCSP Stapling</td>
+                        <td className="py-2">
+                          <Badge bg={endpoint.details?.ocspStapling ? "success" : "warning"}>
+                            {endpoint.details?.ocspStapling ? "Enabled" : "Disabled"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                </Card>
+              ))
+            ) : (
+              <p className="text-muted">No endpoint data found.</p>
+            )}
+          </div>
         </Tab>
 
         {/* CERTIFICATES PART*/}
-        <Tab eventKey="certificates" title="Certificates"
-        style={{
-          maxHeight:'560px',
-          overflowY:'auto',
-          overflowX:'hidden',
-
-        }}
-        >
-          {certs.length > 0 ? (
-            certs.map((cert, index) => (
-              <Card key={index} className="p-3 mb-3 border rounded shadow-sm">
-                <h5 className="mb-3 fw-bold">Certificate #{index + 1}</h5>
-                <Table borderless hover responsive className="mb-0">
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div className="fw-bolder">Subject</div>
-                      </td>
-                      <td>{cert.subject || "N/A"}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Issuer</strong>
-                      </td>
-                      <td>{cert.issuerSubject || "N/A"}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Algorithm</strong>
-                      </td>
-                      <td>{cert.keyAlg || "N/A"}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Key Size</strong>
-                      </td>
-                      <td>{cert.keySize ? `${cert.keySize} bits` : "N/A"}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Valid From</strong>
-                      </td>
-                      <td>
-                        {cert.notBefore
-                          ? new Date(cert.notBefore).toDateString()
-                          : "N/A"}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Valid Till</strong>
-                      </td>
-                      <td>
-                        {cert.notAfter
-                          ? new Date(cert.notAfter).toDateString()
-                          : "N/A"}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Alternative Names</strong>
-                      </td>
-                      <td>
-                        {cert.altNames && cert.altNames.length > 0
-                          ? cert.altNames.map((name, i) => (
-                              <Badge
-                                bg="light"
-                                text="dark"
-                                className="me-1"
-                                key={i}
-                              >
-                                {name}
-                              </Badge>
-                            ))
-                          : "N/A"}
-                      </td>
-                    </tr>
-                  </tbody>
-                </Table>
-              </Card>
-            ))
-          ) : (
-            <p>No certificate data available.</p>
-          )}
+        <Tab eventKey="certificates" title="Certificates">
+          <div style={{ maxHeight: '560px', overflowY: 'auto' }} className="mt-3">
+            {certs.length > 0 ? (
+              certs.map((cert, index) => (
+                <Card key={index} className="border-0 bg-light p-3 mb-3">
+                  <h6 className="fw-bold mb-3">
+                    <FileText size={18} className="me-2" />
+                    Certificate #{index + 1}
+                  </h6>
+                  <Table className="mb-0">
+                    <tbody>
+                      <tr className="border-bottom">
+                        <td className="py-2 text-muted">Subject</td>
+                        <td className="py-2 fw-semibold">{cert.subject || "N/A"}</td>
+                      </tr>
+                      <tr className="border-bottom">
+                        <td className="py-2 text-muted">Issuer</td>
+                        <td className="py-2 fw-semibold">{cert.issuerSubject || "N/A"}</td>
+                      </tr>
+                      <tr className="border-bottom">
+                        <td className="py-2 text-muted">Algorithm</td>
+                        <td className="py-2 fw-semibold">{cert.keyAlg || "N/A"}</td>
+                      </tr>
+                      <tr className="border-bottom">
+                        <td className="py-2 text-muted">Key Size</td>
+                        <td className="py-2 fw-semibold">{cert.keySize ? `${cert.keySize} bits` : "N/A"}</td>
+                      </tr>
+                      <tr className="border-bottom">
+                        <td className="py-2 text-muted">Valid From</td>
+                        <td className="py-2 fw-semibold">
+                          {cert.notBefore ? new Date(cert.notBefore).toDateString() : "N/A"}
+                        </td>
+                      </tr>
+                      <tr className="border-bottom">
+                        <td className="py-2 text-muted">Valid Till</td>
+                        <td className="py-2 fw-semibold">
+                          {cert.notAfter ? new Date(cert.notAfter).toDateString() : "N/A"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 text-muted">Alternative Names</td>
+                        <td className="py-2">
+                          <div className="d-flex flex-wrap gap-2">
+                            {cert.altNames && cert.altNames.length > 0
+                              ? cert.altNames.map((name, i) => (
+                                  <Badge bg="light" text="dark" className="px-2 py-1" key={i}>
+                                    {name}
+                                  </Badge>
+                                ))
+                              : "N/A"}
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                </Card>
+              ))
+            ) : (
+              <p className="text-muted">No certificate data available.</p>
+            )}
+          </div>
         </Tab>
 
         {/*  SECURITY PART */}
@@ -407,6 +373,7 @@ function SSLDetailsAnalysis({ result }) {
           </Card>
         </Tab>
       </Tabs>
+      </Card.Body>
     </Card>
   );
 }

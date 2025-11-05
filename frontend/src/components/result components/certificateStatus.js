@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Badge, Button, Card, Col, Row } from "react-bootstrap";
+import { Shield, Calendar, Key, Award } from "lucide-react";
 
 function CertificateStatus({result}){
     const [loadname, setLoadName] = useState(5);
@@ -19,56 +20,91 @@ function CertificateStatus({result}){
 
     return(
 
-        <Card className="p-4 mt-4 shadow-sm" >
-            <h5>Certificate Status</h5>
-            <Row className="mt-3">
-                <Col md={3} className="text-center">
-                <Badge bg="success" className="mb-2">Valid</Badge>
-                <p className="fw-bolder">Expires in</p>
-                <h2>{validDays}</h2>
-                <small>Expires on: {new Date(cert.notAfter).toDateString()}</small>
+        <Card className="shadow-sm border-0 mt-4">
+          <Card.Body className="p-4">
+            <div className="d-flex align-items-center mb-4">
+              <div className="bg-success bg-opacity-10 rounded d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                <Shield className="text-success" size={20} />
+              </div>
+              <h5 className="fw-bold mb-0">Certificate Status</h5>
+            </div>
+            <Row>
+                <Col md={3}>
+                  <Card className="border-0 bg-light text-center p-3">
+                    <Badge bg="success" className="mb-2 py-2">Valid</Badge>
+                    <p className="fw-semibold mb-2">Expires in</p>
+                    <h2 className="fw-bold text-primary mb-2">{validDays}</h2>
+                    <small className="text-muted">days</small>
+                    <hr className="my-3" />
+                    <small className="text-muted">
+                      <Calendar size={14} className="me-1" />
+                      {new Date(cert.notAfter).toDateString()}
+                    </small>
+                  </Card>
                 </Col>
 
-                <Col md={9} >
-                <Row>
+                <Col md={9}>
+                  <Row className="g-3">
                     <Col md={6}>
-                    <p><strong>Subject</strong> {cert.subject || "NA"} </p>
-                    <p><strong>Issued by</strong> {cert.issuerSubject || "NA"} </p>
-                    <p><strong>Algorithm</strong> {cert.keyAlg || "NA"} </p>
-                    <p><strong>Key Size</strong> {cert.keySize || "NA"} bits</p>
+                      <div className="mb-3">
+                        <small className="text-muted d-block mb-1">Subject</small>
+                        <p className="fw-semibold mb-0">{cert.subject || "N/A"}</p>
+                      </div>
+                      <div className="mb-3">
+                        <small className="text-muted d-block mb-1">Issued By</small>
+                        <p className="fw-semibold mb-0">{cert.issuerSubject || "N/A"}</p>
+                      </div>
+                      <div className="mb-3">
+                        <small className="text-muted d-block mb-1">
+                          <Key size={14} className="me-1" />
+                          Algorithm
+                        </small>
+                        <p className="fw-semibold mb-0">{cert.keyAlg || "N/A"}</p>
+                      </div>
+                      <div className="mb-3">
+                        <small className="text-muted d-block mb-1">Key Size</small>
+                        <p className="fw-semibold mb-0">{cert.keySize || "N/A"} bits</p>
+                      </div>
                     </Col>
-                    <Col md={6} >
-                    <p><strong>Valid From</strong>{new Date(cert.notBefore).toDateString()}</p>
-                    <p><strong>Certificate Chain</strong>{cert.issues ? "has issues":"Ok"}</p>
-                    <p><strong>Alternative Names</strong></p>
-                    {cert.altNames &&
-                    cert.altNames.slice(0,loadname).map((name,i)=>(
-                        <Badge bg="light" text="secondary" className="me-1" key={i}>
-                            {name}
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <small className="text-muted d-block mb-1">Valid From</small>
+                        <p className="fw-semibold mb-0">{new Date(cert.notBefore).toDateString()}</p>
+                      </div>
+                      <div className="mb-3">
+                        <small className="text-muted d-block mb-1">Certificate Chain</small>
+                        <Badge bg={cert.issues ? "danger" : "success"}>
+                          {cert.issues ? "Has Issues" : "OK"}
                         </Badge>
-                    ))
-                    }
-                    {
-                        cert.altNames && loadname < cert.altNames.length && (
-                            <div className="mt-1">
-                                <Button  
-                                size="sm"
-                                onClick={handlealternatename}
-                                >
-                                    load more 
-                                </Button>
-                            </div>
-                        )
-                    }
+                      </div>
+                      <div className="mb-3">
+                        <small className="text-muted d-block mb-2">Alternative Names</small>
+                        <div className="d-flex flex-wrap gap-2">
+                          {cert.altNames &&
+                            cert.altNames.slice(0,loadname).map((name,i)=>(
+                              <Badge bg="light" text="dark" className="px-2 py-1" key={i}>
+                                {name}
+                              </Badge>
+                            ))
+                          }
+                        </div>
+                        {cert.altNames && loadname < cert.altNames.length && (
+                          <div className="mt-2">
+                            <Button  
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={handlealternatename}
+                            >
+                              Load More
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </Col>
-                </Row>
+                  </Row>
                 </Col>
-
-
-
-                </Row>  
-
-
+            </Row>
+          </Card.Body>
         </Card>
     )
 }

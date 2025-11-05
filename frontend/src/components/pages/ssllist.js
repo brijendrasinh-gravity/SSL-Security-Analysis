@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Card, Badge } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { Eye, Trash2, Shield, Globe, Plus } from "lucide-react";
 import API from "../../api/api";
-
 
 function SslReportsAnalysis() {
   const [reports, setReports] = useState([]);
@@ -26,7 +26,7 @@ function SslReportsAnalysis() {
       );
       if (response.data.success) {
         setReports(response.data.data);
-        setTotalRows(response.data.total); // our pagination
+        setTotalRows(response.data.total);
       }
     } catch (error) {
       console.error("Error fetching reports:", error);
@@ -51,85 +51,218 @@ function SslReportsAnalysis() {
   };
 
   const handlePageChange = (newPage) => {
-    console.log("Page changed to:", newPage);
     setPage(newPage);
   };
 
   const handlePerRowsChange = (newPerPage, page) => {
-    console.log("Rows per page changed to:", newPerPage, "Current page:", page);
     setPerPage(newPerPage);
-    setPage(page); //Issue: When changing to next page it was switching to page 1 instead of going to next page.
-    //solution: setPage(page) so that it stays on next page
+    setPage(page);
   };
+
+
 
   const columns = [
     {
       name: "Domain",
       selector: (row) => row.domain,
       sortable: true,
-    },
-    {
-      name: "Created At",
-      selector: (row) =>
-        new Date(row.createdAt).toLocaleString("en-IN", {
-          dateStyle: "short",
-          timeStyle: "short",
-        }),
-      sortable: true,
-    },
-    {
-      name: "Action",
+      grow: 2,
       cell: (row) => (
-        <>
+        <div className="d-flex align-items-center py-2">
+          <div 
+            className="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center me-3"
+            style={{ width: '40px', height: '40px', minWidth: '40px' }}
+          >
+            <Globe size={20} className="text-primary" />
+          </div>
+          <span className="fw-semibold">{row.domain}</span>
+        </div>
+      ),
+    },
+    {
+      name: "Scan Date",
+      selector: (row) => row.createdAt,
+      sortable: true,
+      cell: (row) => (
+        <div>
+          <div className="fw-semibold">
+            {new Date(row.createdAt).toLocaleDateString("en-US", {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            })}
+          </div>
+          <small className="text-muted">
+            {new Date(row.createdAt).toLocaleTimeString("en-US", {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </small>
+        </div>
+      ),
+    },
+    {
+      name: "Status",
+      center: true,
+      cell: (row) => (
+        <Badge bg="success" className="px-3 py-2">
+          Completed
+        </Badge>
+      ),
+    },
+    {
+      name: "Actions",
+      center: true,
+      cell: (row) => (
+        <div className="d-flex gap-2">
           <Button
-            variant="primary"
+            variant="outline-primary"
             size="sm"
             onClick={() => navigate(`/scan/details/${row.id}`)}
-            className="me-2"
+            className="d-flex align-items-center"
           >
-            Details
+            <Eye size={14} className="me-1" />
+            View
           </Button>
           <Button
-            variant="danger"
+            variant="outline-danger"
             size="sm"
             onClick={() => handleDelete(row.id)}
           >
-            Delete
+            <Trash2 size={14} />
           </Button>
-        </>
+        </div>
       ),
     },
   ];
 
+  const customStyles = {
+    table: {
+      style: {
+        backgroundColor: '#ffffff',
+      },
+    },
+    headRow: {
+      style: {
+        backgroundColor: '#f8f9fa',
+        borderBottom: '2px solid #dee2e6',
+        minHeight: '56px',
+      },
+    },
+    headCells: {
+      style: {
+        fontWeight: '600',
+        fontSize: '14px',
+        color: '#212529',
+        paddingLeft: '16px',
+        paddingRight: '16px',
+      },
+    },
+    rows: {
+      style: {
+        minHeight: '72px',
+        borderBottom: '1px solid #e9ecef',
+        '&:not(:last-of-type)': {
+          borderBottom: '1px solid #e9ecef',
+        },
+      },
+    },
+    cells: {
+      style: {
+        paddingLeft: '16px',
+        paddingRight: '16px',
+      },
+    },
+    pagination: {
+      style: {
+        borderTop: '1px solid #dee2e6',
+        minHeight: '56px',
+      },
+    },
+  };
+
   if (loading) {
     return (
-      <div className="text-center mt-5">
-        <Spinner animation="border" /> <p>Loading reports...</p>
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+        <div className="text-center">
+          <Spinner className="mb-3" />
+          <p className="text-muted">Loading reports...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="text-white fw-bolder mb-0">Scanned Domains</h3>
+    <div className="container" style={{ maxWidth: "1200px" }}>
+      {/* Page Header */}
+      <div className="text-center mb-4">
+        <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+          <Shield className="text-primary" size={40} />
+        </div>
+        <h2 className="fw-bold mb-2">Scanned Domains</h2>
+        <p className="text-muted">View and manage your SSL certificate analysis reports</p>
       </div>
-      <DataTable
-        columns={columns}
-        data={reports}
-        progressPending={loading}
-        pagination
-        paginationServer
-        paginationTotalRows={totalRows}
-        paginationPerPage={perPage}
-        paginationRowsPerPageOptions={[5, 10, 15, 20, 25, 50]}
-        paginationDefaultPage={page}
-        onChangePage={handlePageChange}
-        onChangeRowsPerPage={handlePerRowsChange}
-        pointerOnHover
-        striped
-        persistTableHead
-      />
+
+      {/* Stats and Action Bar */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <span className="text-muted">Total Reports: </span>
+          <span className="fw-bold fs-5">{totalRows}</span>
+        </div>
+        <Button 
+          variant="primary"
+          onClick={() => navigate('/')}
+          className="d-flex align-items-center"
+        >
+          <Plus size={18} className="me-2" />
+          New Scan
+        </Button>
+      </div>
+
+      {/* Table Card */}
+      <Card className="shadow-sm border-0">
+        <Card.Body className="p-0">
+          {reports.length === 0 && !loading ? (
+            <div className="text-center py-5 px-4">
+              <div 
+                className="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                style={{ width: '80px', height: '80px' }}
+              >
+                <Shield size={40} className="text-muted" />
+              </div>
+              <h5 className="fw-bold mb-2">No SSL Reports Found</h5>
+              <p className="text-muted mb-4">Start by analyzing a domain from the Dashboard</p>
+              <Button 
+                variant="primary" 
+                onClick={() => navigate('/')}
+              >
+                <Plus size={18} className="me-2" />
+                Go to Dashboard
+              </Button>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={reports}
+              progressPending={loading}
+              pagination
+              paginationServer
+              paginationTotalRows={totalRows}
+              paginationPerPage={perPage}
+              paginationRowsPerPageOptions={[10, 20, 30, 50]}
+              paginationDefaultPage={page}
+              onChangePage={handlePageChange}
+              onChangeRowsPerPage={handlePerRowsChange}
+              customStyles={customStyles}
+              noDataComponent={
+                <div className="text-center py-5">
+                  <p className="text-muted mb-0">No data available</p>
+                </div>
+              }
+            />
+          )}
+        </Card.Body>
+      </Card>
     </div>
   );
 }

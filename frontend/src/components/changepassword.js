@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Form, Button, Alert, Spinner } from "react-bootstrap";
+import { useState } from "react";
+import { Form, Button, Alert, Spinner, Card, InputGroup } from "react-bootstrap";
+import { Lock, Eye, EyeOff, Shield } from "lucide-react";
 import API from "../api/api";
 
 function ChangePassword() {
@@ -10,6 +11,15 @@ function ChangePassword() {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [showPasswords, setShowPasswords] = useState({
+    old: false,
+    new: false,
+    confirm: false,
+  });
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords({ ...showPasswords, [field]: !showPasswords[field] });
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -44,52 +54,120 @@ function ChangePassword() {
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: "500px" }}>
-      <h3 className="text-center mb-4 text-white fw-bold">Change Password</h3>
+    <div className="container mt-5" style={{ maxWidth: "600px" }}>
+      <div className="text-center mb-4">
+        <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+          <Shield className="text-primary" size={40} />
+        </div>
+        <h2 className="fw-bold">Change Password</h2>
+        <p className="text-muted">Update your account password</p>
+      </div>
 
-      {message.text && <Alert variant={message.type}>{message.text}</Alert>}
+      <Card className="shadow-sm border-0">
+        <Card.Body className="p-4">
+          {message.text && (
+            <Alert variant={message.type} className="mb-4">
+              {message.text}
+            </Alert>
+          )}
 
-      <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3">
-          <Form.Label>Old Password</Form.Label>
-          <Form.Control
-            type="password"
-            name="oldpassword"
-            value={formData.oldpassword}
-            onChange={handleChange}
-            placeholder="Enter your old password"
-            required
-          />
-        </Form.Group>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">
+                <Lock size={16} className="me-2" />
+                Current Password
+              </Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type={showPasswords.old ? "text" : "password"}
+                  name="oldpassword"
+                  value={formData.oldpassword}
+                  onChange={handleChange}
+                  placeholder="Enter your current password"
+                  size="lg"
+                  required
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => togglePasswordVisibility("old")}
+                >
+                  {showPasswords.old ? <EyeOff size={18} /> : <Eye size={18} />}
+                </Button>
+              </InputGroup>
+            </Form.Group>
 
-        <Form.Group className="mb-3">
-          <Form.Label>New Password</Form.Label>
-          <Form.Control
-            type="password"
-            name="newpassword"
-            value={formData.newpassword}
-            onChange={handleChange}
-            placeholder="Enter new password"
-            required
-          />
-        </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">
+                <Lock size={16} className="me-2" />
+                New Password
+              </Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type={showPasswords.new ? "text" : "password"}
+                  name="newpassword"
+                  value={formData.newpassword}
+                  onChange={handleChange}
+                  placeholder="Enter new password"
+                  size="lg"
+                  required
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => togglePasswordVisibility("new")}
+                >
+                  {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                </Button>
+              </InputGroup>
+              <Form.Text className="text-muted">
+                Password must be at least 8 characters long
+              </Form.Text>
+            </Form.Group>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Confirm New Password</Form.Label>
-          <Form.Control
-            type="password"
-            name="confirmpassword"
-            value={formData.confirmpassword}
-            onChange={handleChange}
-            placeholder="Confirm new password"
-            required
-          />
-        </Form.Group>
+            <Form.Group className="mb-4">
+              <Form.Label className="fw-semibold">
+                <Lock size={16} className="me-2" />
+                Confirm New Password
+              </Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type={showPasswords.confirm ? "text" : "password"}
+                  name="confirmpassword"
+                  value={formData.confirmpassword}
+                  onChange={handleChange}
+                  placeholder="Confirm new password"
+                  size="lg"
+                  required
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => togglePasswordVisibility("confirm")}
+                >
+                  {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                </Button>
+              </InputGroup>
+            </Form.Group>
 
-        <Button type="submit" variant="primary" className="w-100" disabled={loading}>
-          {loading ? <Spinner animation="border" size="sm" /> : "Update Password"}
-        </Button>
-      </Form>
+            <div className="d-grid">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="fw-semibold"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Updating Password...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
+              </Button>
+            </div>
+          </Form>
+        </Card.Body>
+      </Card>
     </div>
   );
 }

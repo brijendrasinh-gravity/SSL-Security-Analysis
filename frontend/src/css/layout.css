@@ -1,0 +1,267 @@
+/* Sidebar Styles */
+.sidebar {
+  transition: all 0.3s ease;
+  background: linear-gradient(180deg, #212529 0%, #1a1d20 100%) !important;
+}
+
+.sidebar .nav-link {
+  transition: all 0.2s ease;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  padding: 12px 16px !important;
+  font-weight: 500;
+}
+
+.sidebar .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  transform: translateX(6px);
+  color: white !important;
+}
+
+.sidebar .nav-link.active {
+  background: linear-gradient(135deg, var(--bs-primary) 0%, #0056b3 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4);
+  transform: translateX(6px);
+}
+
+/* Header Styles */
+.user-profile-toggle .dropdown-toggle::after {
+  display: none !important;
+}
+
+.dropdown-menu {
+  border: none !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 12px !important;
+  padding: 8px 0 !important;
+}
+
+.dropdown-item {
+  padding: 8px 16px !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa !important;
+  transform: translateX(4px) !important;
+}
+
+.dropdown-item:focus {
+  background-color: #f8f9fa !important;
+}
+
+/* Search Input Styles */
+.form-control:focus {
+  border-color: var(--bs-primary) !important;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15) !important;
+}
+
+/* Header responsive */
+@media (max-width: 992px) {
+  header {
+    margin-left: 0 !important;
+  }
+}
+
+/* Card Enhancements */
+.card {
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Button Enhancements */
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* DataTable Custom Styles */
+.rdt_TableHeadRow {
+  background-color: #f8f9fa !important;
+  border-bottom: 2px solid #dee2e6 !important;
+}
+
+.rdt_TableRow:hover {
+  background-color: #f8f9fa !important;
+  cursor: pointer;
+}
+
+/* Loading Spinner */
+.spinner-border {
+  animation: spinner-border 0.75s linear infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.show {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0 !important;
+  }
+  
+  .navbar {
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  
+  .card-body {
+    padding: 1rem !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Badge Styles */
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Alert Enhancements */
+.alert {
+  border-radius: 12px;
+  border: none;
+}
+
+.alert-success {
+  background-color: rgba(25, 135, 84, 0.1);
+  color: #0f5132;
+}
+
+/* Form Enhancements */
+.form-control:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+/* Header Animation */
+header {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Notification Badge Animation */
+.badge {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* User Avatar Hover Effect */
+.user-profile-toggle:hover .bg-primary {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+/* Search Input Enhancement */
+.form-control {
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  transform: scale(1.02);
+}
+
+/* Sidebar Brand Enhancement */
+.sidebar .bg-primary {
+  transition: all 0.3s ease;
+}
+
+.sidebar .bg-primary:hover {
+  transform: rotate(5deg) scale(1.1);
+}
+
+/* Main Content Area */
+main {
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 70px);
+}
+
+/* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Button Hover Effects */
+.btn-outline-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+}
+
+/* Mobile Responsive Improvements */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.show {
+    transform: translateX(0);
+  }
+  
+  main {
+    padding-top: 20px !important;
+  }
+  
+  header {
+    padding: 0 15px !important;
+  }
+}

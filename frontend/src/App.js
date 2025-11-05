@@ -1,7 +1,8 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./css/layout.css";
 import { Routes, Route } from "react-router-dom";
-import Header from "./components/navbar";
+import Layout from "./components/layout/Layout";
 import SearchDomain from "./components/searchdomain";
 import SslReportDetails from "./components/pages/ssldetails";
 import SslReportsAnalysis from "./components/pages/ssllist";
@@ -17,60 +18,56 @@ import BackButton from "./components/common/backbutton";
 
 function App() {
   return (
-    <div className="bg-secondary min-vh-100">
-      <Header />
+    <Layout>
+      <Routes>
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
 
-      <div className="bg-secondary min-vh-100">
-        <Routes>
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <SearchDomain />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/scan"
-            element={
-              <ProtectedRoute>
-                <SslReportsAnalysis />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/scan/details/:id"
-            element={
-              <ProtectedRoute>
-                <SslReportDetails backButton={<BackButton label="Back" to="/profile" variant="dark" />}/>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/change-password"
-            element={
-              <ProtectedRoute>
-                <ChangePassword />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/verify-otp" element={<VerifyOtp />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-        </Routes>
-      </div>
-    </div>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <SearchDomain />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/scan"
+          element={
+            <ProtectedRoute>
+              <SslReportsAnalysis />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/scan/details/:id"
+          element={
+            <ProtectedRoute>
+              <SslReportDetails backButton={<BackButton label="Back" to="/scan" variant="primary" />}/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePassword />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+      </Routes>
+    </Layout>
   );
 }
 

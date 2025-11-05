@@ -1,0 +1,106 @@
+import { Dropdown, Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { User, LogOut, Settings, Menu } from 'lucide-react';
+
+function Header({ isCollapsed, toggleSidebar }) {
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
+  return (
+    <header 
+      className="bg-white border-bottom position-sticky top-0"
+      style={{ 
+        zIndex: 1020, 
+        height: '70px'
+      }}
+    >
+      <div className="d-flex align-items-center justify-content-between h-100 px-4">
+        <div className="d-flex align-items-center">
+          <Button
+            variant="link"
+            className="p-2 text-dark border-0"
+            onClick={toggleSidebar}
+          >
+            <Menu size={20} />
+          </Button>
+        </div>
+
+        <div className="d-flex align-items-center gap-3">
+          {!token ? (
+            <div className="d-flex gap-2">
+              <Button 
+                variant="outline-primary"
+                size="sm"
+                onClick={() => navigate('/register')}
+              >
+                Register
+              </Button>
+              <Button 
+                variant="primary"
+                size="sm"
+                onClick={() => navigate('/login')}
+              >
+                Login
+              </Button>
+            </div>
+          ) : (
+            <Dropdown align="end">
+              <Dropdown.Toggle 
+                as="div"
+                className="d-flex align-items-center"
+                style={{ cursor: 'pointer' }}
+              >
+                <div 
+                  className="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white"
+                  style={{ width: '36px', height: '36px', fontSize: '14px', fontWeight: '600' }}
+                >
+                  U
+                </div>
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu className="shadow border-0 mt-2" style={{ minWidth: '200px' }}>
+                <div className="px-3 py-2 border-bottom">
+                  <div className="fw-semibold text-dark">User Name</div>
+                  <div className="text-muted small">user@example.com</div>
+                </div>
+                
+                <Dropdown.Item 
+                  onClick={() => navigate('/profile')}
+                  className="d-flex align-items-center py-2"
+                >
+                  <User size={16} className="me-3 text-muted" />
+                  My Profile
+                </Dropdown.Item>
+                
+                <Dropdown.Item 
+                  onClick={() => navigate('/change-password')}
+                  className="d-flex align-items-center py-2"
+                >
+                  <Settings size={16} className="me-3 text-muted" />
+                  Settings
+                </Dropdown.Item>
+                
+                <Dropdown.Divider />
+                
+                <Dropdown.Item 
+                  onClick={handleLogout}
+                  className="d-flex align-items-center py-2 text-danger"
+                >
+                  <LogOut size={16} className="me-3" />
+                  Sign Out
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+export default Header;
