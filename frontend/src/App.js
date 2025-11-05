@@ -37,8 +37,7 @@ function App() {
             path="/scan"
             element={
               <ProtectedRoute>
-                {/* backButton={<BackButton label="Back" />} */}
-                <SslReportsAnalysis backButton={<BackButton label="Back"/>}/>
+                <SslReportsAnalysis />
               </ProtectedRoute>
             }
           />
@@ -46,7 +45,7 @@ function App() {
             path="/scan/details/:id"
             element={
               <ProtectedRoute>
-                <SslReportDetails backButton={<BackButton label="Back" />}/>
+                <SslReportDetails backButton={<BackButton label="Back" to="/profile" variant="dark" />}/>
               </ProtectedRoute>
             }
           />

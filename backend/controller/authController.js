@@ -5,19 +5,45 @@ const Sslreports = require('../model/sslReportModel');
 const User = require('../model/userModel');
 const nodemailer = require("nodemailer");
 
-// Generate a 6-digit OTP
-// function generateOTP() {
-//   return Math.floor(100000 + Math.random() * 900000).toString();
-// }
-
 // Nodemailer Transporter (using Gmail)
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.GMAIL_USER, // your gmail
-    pass: process.env.GMAIL_PASS, // your app password
+    user: process.env.GMAIL_USER, 
+    pass: process.env.GMAIL_PASS, 
   },
 });
+
+const sendWelcomeEmail = async (to, user_name) => {
+  const mailOptions = {
+    from: `"SSL Security Analysis" <${process.env.GMAIL_USER}>`,
+    to,
+    subject: "🎉 Welcome to SSL Security Analysis!",
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height:1.6; color:#333;">
+        <h2 style="color:#0056b3;">Welcome to SSL Security Analysis, ${user_name}!</h2>
+        <p>
+          We're thrilled to have you on board. 
+          With <strong>SSL Security Analysis</strong>, you can easily scan and evaluate your website's SSL configuration for improved security and trust.
+        </p>
+        <p>
+          Start by logging in and scanning your first domain — it's quick and easy.
+        </p>
+        
+        <p style="margin-top:20px;">
+          Best regards,<br/>
+          <strong>The SSL Security Analysis Team</strong>
+        </p>
+      </div>
+    `,
+  };
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(` Welcome email sent to ${to}`);
+  } catch (error) {
+    console.error(" Error sending welcome email:", error.message);
+  }
+};
 
 
 exports.registration = async (req, res) => {
@@ -37,6 +63,11 @@ exports.registration = async (req, res) => {
       email,
       password: hashedPassword,
     });
+
+    sendWelcomeEmail(newUser.email, newUser.user_name).catch((err)=>
+    console.error("email send error",err));
+
+
     res.status(201).json({ message: "User registered", newUser });
   } catch (err) {
     console.error("registration error:", err);
@@ -210,3 +241,6 @@ exports.resetForgotPassword = async (req, res) => {
     res.status(500).json({ error: "Server error while resetting password" });
   }
 };
+
+
+//WelCome Email to first time register user

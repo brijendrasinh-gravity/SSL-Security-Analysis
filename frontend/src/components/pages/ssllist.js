@@ -3,9 +3,9 @@ import DataTable from "react-data-table-component";
 import { Button, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/api";
-import BackButton from "../common/backbutton";
 
-function SslReportsAnalysis({ backButton }) {
+
+function SslReportsAnalysis() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -113,7 +113,6 @@ function SslReportsAnalysis({ backButton }) {
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="text-white fw-bolder mb-0">Scanned Domains</h3>
-        {backButton}
       </div>
       <DataTable
         columns={columns}

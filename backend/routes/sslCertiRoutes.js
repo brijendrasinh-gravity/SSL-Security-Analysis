@@ -17,8 +17,9 @@ router.post('/login' ,authController.login);
 router.post('/changepassword',auth, authController.changePassword);
 // router.post('/forgotpassword', authController.forgotPassword);
 // router.post('/forgotresetpassword', authController.resetForgotPassword);
-router.get('/profile', auth, sslCrudController.getProfile);
 
+router.get('/profile', auth, sslCrudController.getProfile);
+router.put('/updateprofile', auth, sslCrudController.updateProfile);
 
 
 //OTP

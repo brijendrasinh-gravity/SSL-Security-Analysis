@@ -186,6 +186,8 @@ exports.getProfile = async (req, res) => {
         "id",
         "user_name",
         "email",
+        "phone_number",
+        "description",
         "status",
         "createdAt",
         "updatedAt",
