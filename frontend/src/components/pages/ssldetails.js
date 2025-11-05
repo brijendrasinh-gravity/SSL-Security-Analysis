@@ -1,0 +1,73 @@
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Spinner } from "react-bootstrap";
+import API from "../../api/api";
+import BackButton from "../common/backbutton"; 
+import SecurityGradeAnalysis from "../result components/securitygradeanalysis";
+import CertificateStatus from "../result components/certificateStatus";
+import Securityissues from "../result components/securityissues";
+import SSLdetailanalysis from "../result components/ssldetailsanalysis";
+import CertificateTransparencyAnalysis from "../result components/certificateanalysis";
+
+function SslReportDetails({ backButton }) {
+  const { id } = useParams();
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (id) fetchReportById();
+  }, [id]);
+
+  const fetchReportById = async () => {
+    try {
+      const response = await API.get(`/sslanalysis/getreportbyid/${id}`);
+      if (response.data.success) {
+        setReport(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching report:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading)
+    return (
+      <div className="text-center mt-5">
+        <Spinner animation="grow" /> <p>Loading report details...</p>
+      </div>
+    );
+
+  if (!report) return <p className="text-center mt-5">Report not found.</p>;
+
+  const result = {
+    ssllabs:
+      typeof report.ssllabs === "string"
+        ? JSON.parse(report.ssllabs)
+        : report.ssllabs || {},
+    certificateTransparency:
+      typeof report.certificateTransparency === "string"
+        ? JSON.parse(report.certificateTransparency)
+        : report.certificateTransparency || {},
+  };
+
+  return (
+    <div className="container mt-4">
+
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h3 className="text-white fw-bolder mb-0">
+          SSL Report Details - {report.domain}
+        </h3>
+        {backButton}
+      </div>
+
+      <SecurityGradeAnalysis result={result} />
+      <CertificateStatus result={result} />
+      <Securityissues result={result} />
+      <SSLdetailanalysis result={result} />
+      <CertificateTransparencyAnalysis result={result} />
+    </div>
+  );
+}
+
+export default SslReportDetails;

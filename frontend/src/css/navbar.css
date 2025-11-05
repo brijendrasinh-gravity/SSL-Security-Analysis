@@ -1,0 +1,41 @@
+/* Navbar container */
+.custom-navbar {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.8rem 0;
+}
+
+/* Brand title with gradient text */
+.brand-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #00296b, #00b4d8);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-decoration: none;
+}
+
+/* Nav link style */
+.nav-link {
+  color: #00296b;
+  font-weight: 500;
+  margin-left: 1.2rem;
+  text-decoration: none !important; /* remove underline */
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover effect (blue background) */
+.nav-link:hover {
+  background-color: #e0f3ff;
+  color: #007bff;
+  text-decoration: none;
+}
+
+/* Active page (orange background) */
+.nav-link.active {
+  background-color: #ff7a00;
+  color: #ffffff !important;
+}
