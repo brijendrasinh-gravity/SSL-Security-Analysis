@@ -6,6 +6,7 @@
 .pnp.js
 /Backend-ControlBase.zip
 /Controller.zip
+.env
 
 # testing
 /coverage
