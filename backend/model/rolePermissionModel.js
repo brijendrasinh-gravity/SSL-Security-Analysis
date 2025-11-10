@@ -15,6 +15,10 @@ const RolePermission = sequelize.define(
     module_name: {
       type: DataTypes.STRING,
     },
+    cb_deleted:{
+      type:DataTypes.BOOLEAN,
+      defaultValue:false 
+    },
     canList: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
@@ -31,6 +35,7 @@ const RolePermission = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+   
   },
   {
     timestamps: true,

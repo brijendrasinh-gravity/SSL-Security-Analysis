@@ -14,11 +14,11 @@ function AddRole() {
     permissions: [],
   });
 
-  // Fetch all modules
   const fetchModules = async () => {
     try {
       const res = await API.get("/roles/get-module");
       const modData = res.data.data || [];
+
       const permissionsArray = modData.map((mod) => ({
         module_name: mod.module_name,
         canList: false,
@@ -26,6 +26,7 @@ function AddRole() {
         canModify: false,
         canDelete: false,
       }));
+
       setModules(modData);
       setRoleData((prev) => ({ ...prev, permissions: permissionsArray }));
     } catch (error) {
@@ -37,12 +38,11 @@ function AddRole() {
     fetchModules();
   }, []);
 
-  // Handle checkbox toggle
+  // All checkbox logic
   const handlePermissionChange = (moduleIndex, key, value) => {
     const updated = [...roleData.permissions];
     updated[moduleIndex][key] = value;
 
-    // If "All" is clicked, toggle all permissions
     if (key === "all") {
       updated[moduleIndex].canList = value;
       updated[moduleIndex].canCreate = value;
@@ -57,37 +57,45 @@ function AddRole() {
     return perm.canList && perm.canCreate && perm.canModify && perm.canDelete;
   };
 
-  // Submit role
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const payload = {
-        name: roleData.name,
-        is_Admin: roleData.is_Admin,
-        permissions: roleData.permissions,
-      };
 
-      await API.post("/roles/create-role", payload);
-      alert("Role created successfully!");
-      navigate("/role");
-    } catch (error) {
-      console.error("Error creating role:", error);
-      alert("Failed to create role");
-    } finally {
-      setLoading(false);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const payload = {
+      name: roleData.name.trim(),
+      is_Admin: roleData.is_Admin,
+      permissions: roleData.permissions,
+    };
+
+    const res = await API.post("/roles/create-role", payload);
+
+    alert("Role created successfully!");
+    navigate("/role");
+  } catch (error) {
+    console.error("Error creating role:", error);
+
+    if (error.response && error.response.data && error.response.data.message) {
+      alert(error.response.data.message); //will show role name exists
+    } else {
+      alert("Failed to create role. Please try again.");
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="container mt-4">
-      {/* Header Section */}
+
       <div className="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded shadow-sm">
         <div className="d-flex align-items-center gap-2">
           <ShieldCheck size={24} className="text-primary" />
           <div>
             <h4 className="mb-0 fw-bold text-primary">Add New Role</h4>
-            <small className="text-muted">Assign permissions and admin rights</small>
+            <small className="text-muted">
+              Assign permissions and admin rights
+            </small>
           </div>
         </div>
         <Button
@@ -101,10 +109,10 @@ function AddRole() {
         </Button>
       </div>
 
-      {/* Role Form */}
+
       <Card className="p-4 shadow-sm border-0">
         <Form onSubmit={handleSubmit}>
-          {/* Name & Admin Toggle */}
+
           <div className="row mb-4">
             <div className="col-md-8">
               <Form.Group>
@@ -134,7 +142,6 @@ function AddRole() {
             </div>
           </div>
 
-          {/* Permissions Table */}
           <div className="mt-3">
             <Table bordered hover responsive className="align-middle">
               <thead className="table-light text-center text-dark">
@@ -151,55 +158,105 @@ function AddRole() {
                 {modules.length > 0 ? (
                   modules.map((mod, index) => {
                     const perm = roleData.permissions[index];
+                    const available =
+                      mod.permissions_list?.map((p) =>
+                        p.name.split("-")[1]
+                      ) || [];
+
                     return (
                       <tr key={index} className="text-center">
                         <td className="text-start fw-semibold">
                           {mod.title || mod.module_name}
                         </td>
+
                         <td>
-                          <Form.Check
-                            type="checkbox"
-                            checked={isAllChecked(perm)}
-                            onChange={(e) =>
-                              handlePermissionChange(index, "all", e.target.checked)
-                            }
-                          />
+                          {available.length > 0 ? (
+                            <Form.Check
+                              type="checkbox"
+                              checked={isAllChecked(perm)}
+                              onChange={(e) =>
+                                handlePermissionChange(
+                                  index,
+                                  "all",
+                                  e.target.checked
+                                )
+                              }
+                            />
+                          ) : (
+                            <span>-</span>
+                          )}
                         </td>
+
                         <td>
-                          <Form.Check
-                            type="checkbox"
-                            checked={perm.canList}
-                            onChange={(e) =>
-                              handlePermissionChange(index, "canList", e.target.checked)
-                            }
-                          />
+                          {available.includes("list") ? (
+                            <Form.Check
+                              type="checkbox"
+                              checked={perm.canList}
+                              onChange={(e) =>
+                                handlePermissionChange(
+                                  index,
+                                  "canList",
+                                  e.target.checked
+                                )
+                              }
+                            />
+                          ) : (
+                            <span>-</span>
+                          )}
                         </td>
+
                         <td>
-                          <Form.Check
-                            type="checkbox"
-                            checked={perm.canCreate}
-                            onChange={(e) =>
-                              handlePermissionChange(index, "canCreate", e.target.checked)
-                            }
-                          />
+                          {available.includes("create") ? (
+                            <Form.Check
+                              type="checkbox"
+                              checked={perm.canCreate}
+                              onChange={(e) =>
+                                handlePermissionChange(
+                                  index,
+                                  "canCreate",
+                                  e.target.checked
+                                )
+                              }
+                            />
+                          ) : (
+                            <span>-</span>
+                          )}
                         </td>
+
                         <td>
-                          <Form.Check
-                            type="checkbox"
-                            checked={perm.canModify}
-                            onChange={(e) =>
-                              handlePermissionChange(index, "canModify", e.target.checked)
-                            }
-                          />
+                          {available.includes("modify") ? (
+                            <Form.Check
+                              type="checkbox"
+                              checked={perm.canModify}
+                              onChange={(e) =>
+                                handlePermissionChange(
+                                  index,
+                                  "canModify",
+                                  e.target.checked
+                                )
+                              }
+                            />
+                          ) : (
+                            <span>-</span>
+                          )}
                         </td>
+
                         <td>
-                          <Form.Check
-                            type="checkbox"
-                            checked={perm.canDelete}
-                            onChange={(e) =>
-                              handlePermissionChange(index, "canDelete", e.target.checked)
-                            }
-                          />
+                          {available.includes("delete") ? (
+                            <Form.Check
+                              type="checkbox"
+                              checked={perm.canDelete}
+                              onChange={(e) =>
+                                handlePermissionChange(
+                                  index,
+                                  "canDelete",
+                                  e.target.checked
+                                )
+                              }
+                            />
+                          ) : (
+                            <span>-</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -215,12 +272,11 @@ function AddRole() {
             </Table>
           </div>
 
-          {/* Buttons */}
           <div className="d-flex justify-content-end mt-3">
             <Button
               variant="secondary"
               className="me-2 d-flex align-items-center gap-2"
-              onClick={() => navigate("/roles")}
+              onClick={() => navigate("/role")}
             >
               <ArrowLeft size={16} /> Cancel
             </Button>

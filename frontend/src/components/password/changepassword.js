@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Form, Button, Alert, Spinner, Card, InputGroup } from "react-bootstrap";
 import { Lock, Eye, EyeOff, Shield } from "lucide-react";
-import API from "../api/api";
+import API from "../../api/api";
 
 function ChangePassword() {
   const [formData, setFormData] = useState({

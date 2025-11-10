@@ -1,15 +1,11 @@
 import { useState } from "react";
 import { Form, Button, Alert, Spinner, Card, Row, Col } from "react-bootstrap";
 import { useNavigate, Link } from "react-router-dom";
-import { UserPlus, Shield, Mail, Lock, User } from "lucide-react";
-import API from "../api/api";
+import { LogIn, Shield, Mail, Lock } from "lucide-react";
+import API from "../../api/api";
 
-function Register() {
-  const [formData, setFormData] = useState({
-    user_name: "",
-    email: "",
-    password: "",
-  });
+function Login() {
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const navigate = useNavigate();
@@ -24,12 +20,15 @@ function Register() {
     setMessage({ type: "", text: "" });
 
     try {
-      const response = await API.post("/sslanalysis/registration", formData);
-      setMessage({ type: "success", text: response.data.message });
-      setFormData({ user_name: "", email: "", password: "" });
-      setTimeout(() => navigate("/login"), 2000);
+      const response = await API.post("/sslanalysis/login", formData);
+      localStorage.setItem("token", response.data.token);
+      setMessage({ type: "success", text: "Login successful!" });
+      setTimeout(() => navigate("/"), 1500);
     } catch (err) {
-      setMessage({ type: "danger", text: err.response?.data?.error || "Registration failed" });
+      setMessage({
+        type: "danger",
+        text: err.response?.data?.error || "Login failed",
+      });
     } finally {
       setLoading(false);
     }
@@ -45,7 +44,7 @@ function Register() {
                 <Shield className="text-primary" size={40} />
               </div>
               <h2 className="fw-bold text-dark">SSL Security Analysis</h2>
-              <p className="text-muted">Create your account</p>
+              <p className="text-muted">Sign in to your account</p>
             </div>
 
             <Card className="shadow border-0">
@@ -57,22 +56,6 @@ function Register() {
                 )}
 
                 <Form onSubmit={handleSubmit}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
-                      <User size={16} className="me-2" />
-                      User Name
-                    </Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="user_name"
-                      value={formData.user_name}
-                      onChange={handleChange}
-                      placeholder="Enter your name"
-                      size="lg"
-                      required
-                    />
-                  </Form.Group>
-
                   <Form.Group className="mb-3">
                     <Form.Label className="fw-semibold">
                       <Mail size={16} className="me-2" />
@@ -105,6 +88,15 @@ function Register() {
                     />
                   </Form.Group>
 
+                  <div className="d-flex justify-content-end mb-3">
+                    <Link
+                      to="/forgot-password"
+                      className="text-primary text-decoration-none"
+                    >
+                      Forgot Password?
+                    </Link>
+                  </div>
+
                   <div className="d-grid">
                     <Button
                       type="submit"
@@ -116,12 +108,12 @@ function Register() {
                       {loading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
-                          Creating Account...
+                          Signing in...
                         </>
                       ) : (
                         <>
-                          <UserPlus size={18} className="me-2" />
-                          Create Account
+                          <LogIn size={18} className="me-2" />
+                          Sign In
                         </>
                       )}
                     </Button>
@@ -131,12 +123,12 @@ function Register() {
                 <hr className="my-4" />
 
                 <div className="text-center">
-                  <span className="text-muted">Already have an account? </span>
+                  <span className="text-muted">Don't have an account? </span>
                   <Link
-                    to="/login"
+                    to="/register"
                     className="text-primary text-decoration-none fw-semibold"
                   >
-                    Sign In
+                    Create Account
                   </Link>
                 </div>
               </Card.Body>
@@ -148,4 +140,4 @@ function Register() {
   );
 }
 
-export default Register;
+export default Login;

@@ -3,6 +3,47 @@ const RolePermission = require('../../model/rolePermissionModel');
 const Module = require('../../model/moduleModel');
 
 
+// exports.createRole = async (req, res) => {
+//   try {
+//     const { name, is_Admin, permissions } = req.body;
+//     // permissions = array like:
+//     // [
+//     //   { module_name: "User", canList: true, canCreate: true, canModify: true, canDelete: true },
+//     //   { module_name: "Scanned Domain", canList: true, canCreate: true, canModify: false, canDelete: false }
+//     // ]
+
+//     // Create Role
+//     const newRole = await Role.create({ name, is_Admin });
+
+//     //  Validate module names
+//     const modules = await Module.findAll({ attributes: ["module_name"] });
+//     const validModuleNames = modules.map((m) => m.module_name);
+
+//     // Create Role Permissions dynamically
+//     const rolePermissions = permissions
+//       .filter((p) => validModuleNames.includes(p.module_name))
+//       .map((p) => ({
+//         role_id: newRole.id,
+//         module_name: p.module_name,
+//         canList: !!p.canList,
+//         canCreate: !!p.canCreate,
+//         canModify: !!p.canModify,
+//         canDelete: !!p.canDelete,
+//       }));
+
+//     await RolePermission.bulkCreate(rolePermissions);
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Role created successfully with permissions.",
+//       data: { role: newRole, permissions: rolePermissions },
+//     });
+//   } catch (error) {
+//     console.error("Error creating role:", error);
+//     res.status(500).json({ success: false, message: "Error creating role", error: error.message });
+//   }
+// };
+
 exports.createRole = async (req, res) => {
   try {
     const { name, is_Admin, permissions } = req.body;
@@ -12,6 +53,21 @@ exports.createRole = async (req, res) => {
     //   { module_name: "Scanned Domain", canList: true, canCreate: true, canModify: false, canDelete: false }
     // ]
 
+    // Check if role name already exists (and not soft-deleted)
+    const existingRole = await Role.findOne({
+      where: {
+        name,
+        cb_deleted: false, // only check among active roles
+      },
+    });
+
+    if (existingRole) {
+      return res.status(400).json({
+        success: false,
+        message: "Role name already exists. Please choose a different name.",
+      });
+    }
+
     // Create Role
     const newRole = await Role.create({ name, is_Admin });
 
@@ -19,7 +75,7 @@ exports.createRole = async (req, res) => {
     const modules = await Module.findAll({ attributes: ["module_name"] });
     const validModuleNames = modules.map((m) => m.module_name);
 
-    // Create Role Permissions dynamically
+    //  Create Role Permissions dynamically
     const rolePermissions = permissions
       .filter((p) => validModuleNames.includes(p.module_name))
       .map((p) => ({
@@ -40,14 +96,16 @@ exports.createRole = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating role:", error);
-    res.status(500).json({ success: false, message: "Error creating role", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Error creating role", error: error.message });
   }
 };
-
 
 exports.getAllRoles = async (req, res) => {
   try {
     const roles = await Role.findAll({
+      where:{cb_deleted:false},
       include: [
         {
           model: RolePermission,
@@ -238,47 +296,77 @@ exports.updateRole = async (req, res) => {
 };
 
 
+// exports.deleteRole = async (req, res) => {
+//   const t = await Role.sequelize.transaction();
+//   try {
+//     const { id } = req.params;
+
+//     // Check if role exists
+//     const role = await Role.findByPk(id);
+//     if (!role) {
+//       return res.status(404).json({ success: false, message: "Role not found." });
+//     }
+
+//     //Optional safety check: prevent deletion of system Admin
+//     if (role.is_Admin) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Admin role cannot be deleted.",
+//       });
+//     }
+
+//     //  Delete all related role_permissions
+//     await RolePermission.destroy({
+//       where: { role_id: id },
+//       transaction: t,
+//     });
+
+//     // Delete the role itself
+//     await role.destroy({ transaction: t });
+
+//     await t.commit();
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Role and related permissions deleted successfully.",
+//     });
+//   } catch (error) {
+//     await t.rollback();
+//     console.error("Error deleting role:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error deleting role.",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
 exports.deleteRole = async (req, res) => {
-  const t = await Role.sequelize.transaction();
   try {
     const { id } = req.params;
-
-    // Check if role exists
     const role = await Role.findByPk(id);
-    if (!role) {
-      return res.status(404).json({ success: false, message: "Role not found." });
-    }
 
-    //Optional safety check: prevent deletion of system Admin
-    if (role.is_Admin) {
-      return res.status(400).json({
+    if (!role) {
+      return res.status(404).json({
         success: false,
-        message: "Admin role cannot be deleted.",
+        message: "Role not found",
       });
     }
 
-    //  Delete all related role_permissions
-    await RolePermission.destroy({
-      where: { role_id: id },
-      transaction: t,
-    });
-
-    // Delete the role itself
-    await role.destroy({ transaction: t });
-
-    await t.commit();
+    // Update cb_deleted to true (1)
+    await role.update({ cb_deleted: true });
 
     res.status(200).json({
       success: true,
-      message: "Role and related permissions deleted successfully.",
+      message: "Role is deleted successfully",
     });
   } catch (error) {
-    await t.rollback();
     console.error("Error deleting role:", error);
     res.status(500).json({
       success: false,
-      message: "Error deleting role.",
-      error: error.message,
+      message: "Internal server error",
     });
   }
 };
+

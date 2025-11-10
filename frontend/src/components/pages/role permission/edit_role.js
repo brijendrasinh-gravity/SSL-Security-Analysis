@@ -4,8 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import API from "../../../api/api";
 
 function EditRole() {
-    const { id } = useParams();
-    const navigate = useNavigate();
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [modules, setModules] = useState([]);
   const [roleData, setRoleData] = useState({
@@ -14,19 +14,17 @@ function EditRole() {
     permissions: [],
   });
 
-  // Fetch role details + modules
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [modulesRes, roleRes] = await Promise.all([
-          API.get("roles/get-module"),
+          API.get("/roles/get-module"),
           API.get(`/roles/get-role/${id}`),
         ]);
 
         const moduleList = modulesRes.data.data || [];
         const { role, modulePermissions } = roleRes.data.data || {};
 
-        // Merge backend permissions with module list
         const mergedPermissions = moduleList.map((mod) => {
           const existing = modulePermissions?.find(
             (p) => p.module_name.toLowerCase() === mod.module_name.toLowerCase()
@@ -54,7 +52,7 @@ function EditRole() {
     fetchData();
   }, [id]);
 
-  // Handle checkbox toggle
+  // All checkbox logic
   const handlePermissionChange = (moduleIndex, key, value) => {
     const updated = [...roleData.permissions];
     updated[moduleIndex][key] = value;
@@ -82,7 +80,7 @@ function EditRole() {
         permissions: roleData.permissions,
       };
 
-      await API.put(`/roles/update/${id}`, payload);
+      await API.put(`/roles/update-role/${id}`, payload);
       alert("Role updated successfully!");
       navigate("/role");
     } catch (error) {
@@ -99,7 +97,6 @@ function EditRole() {
         <h4 className="fw-bold mb-4">Edit Role</h4>
 
         <Form onSubmit={handleSubmit}>
-          {/* Role Name + Is Admin Switch */}
           <div className="row mb-4">
             <div className="col-md-8">
               <Form.Group>
@@ -128,7 +125,6 @@ function EditRole() {
             </div>
           </div>
 
-          {/* Permissions Table */}
           <Table bordered hover responsive className="align-middle">
             <thead className="table-dark text-center">
               <tr>
@@ -144,71 +140,105 @@ function EditRole() {
               {modules.length > 0 ? (
                 modules.map((mod, index) => {
                   const perm = roleData.permissions[index];
+                  const available =
+                    mod.permissions_list?.map((p) =>
+                      p.name.split("-")[1]
+                    ) || [];
+
                   return (
                     <tr key={index} className="text-center">
                       <td className="text-start fw-semibold">
                         {mod.title || mod.module_name}
                       </td>
+
                       <td>
-                        <Form.Check
-                          type="checkbox"
-                          checked={isAllChecked(perm)}
-                          onChange={(e) =>
-                            handlePermissionChange(index, "all", e.target.checked)
-                          }
-                        />
+                        {available.length > 0 ? (
+                          <Form.Check
+                            type="checkbox"
+                            checked={isAllChecked(perm)}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                index,
+                                "all",
+                                e.target.checked
+                              )
+                            }
+                          />
+                        ) : (
+                          <span>-</span>
+                        )}
                       </td>
+
                       <td>
-                        <Form.Check
-                          type="checkbox"
-                          checked={perm.canList}
-                          onChange={(e) =>
-                            handlePermissionChange(
-                              index,
-                              "canList",
-                              e.target.checked
-                            )
-                          }
-                        />
+                        {available.includes("list") ? (
+                          <Form.Check
+                            type="checkbox"
+                            checked={perm.canList}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                index,
+                                "canList",
+                                e.target.checked
+                              )
+                            }
+                          />
+                        ) : (
+                          <span>-</span>
+                        )}
                       </td>
+
                       <td>
-                        <Form.Check
-                          type="checkbox"
-                          checked={perm.canCreate}
-                          onChange={(e) =>
-                            handlePermissionChange(
-                              index,
-                              "canCreate",
-                              e.target.checked
-                            )
-                          }
-                        />
+                        {available.includes("create") ? (
+                          <Form.Check
+                            type="checkbox"
+                            checked={perm.canCreate}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                index,
+                                "canCreate",
+                                e.target.checked
+                              )
+                            }
+                          />
+                        ) : (
+                          <span>-</span>
+                        )}
                       </td>
+
                       <td>
-                        <Form.Check
-                          type="checkbox"
-                          checked={perm.canModify}
-                          onChange={(e) =>
-                            handlePermissionChange(
-                              index,
-                              "canModify",
-                              e.target.checked
-                            )
-                          }
-                        />
+                        {available.includes("modify") ? (
+                          <Form.Check
+                            type="checkbox"
+                            checked={perm.canModify}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                index,
+                                "canModify",
+                                e.target.checked
+                              )
+                            }
+                          />
+                        ) : (
+                          <span>-</span>
+                        )}
                       </td>
+
                       <td>
-                        <Form.Check
-                          type="checkbox"
-                          checked={perm.canDelete}
-                          onChange={(e) =>
-                            handlePermissionChange(
-                              index,
-                              "canDelete",
-                              e.target.checked
-                            )
-                          }
-                        />
+                        {available.includes("delete") ? (
+                          <Form.Check
+                            type="checkbox"
+                            checked={perm.canDelete}
+                            onChange={(e) =>
+                              handlePermissionChange(
+                                index,
+                                "canDelete",
+                                e.target.checked
+                              )
+                            }
+                          />
+                        ) : (
+                          <span>-</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -223,7 +253,6 @@ function EditRole() {
             </tbody>
           </Table>
 
-          {/* Buttons */}
           <div className="d-flex justify-content-end mt-3">
             <Button
               variant="secondary"
@@ -235,7 +264,7 @@ function EditRole() {
             <Button type="submit" variant="primary" disabled={loading}>
               {loading ? (
                 <>
-                  <Spinner animation="border" size="sm" /> Saving...
+                  <Spinner animation="grow" size="sm" /> Saving...
                 </>
               ) : (
                 "Save Changes"

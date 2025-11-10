@@ -18,6 +18,10 @@ const Role = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    cb_deleted:{
+      type:DataTypes.BOOLEAN,
+      defaultValue:false
+    }
   },
   {
     timestamps: true,

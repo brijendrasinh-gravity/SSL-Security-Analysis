@@ -28,8 +28,8 @@ function RoleManager() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this role?")) {
       try {
-        await API.delete(`/roles/delete/${id}`);
-        fetchRoles(); // Refresh list after delete
+        await API.delete(`/roles/delete-role/${id}`);
+        fetchRoles(); //This is to Refresh list after every delete 
       } catch (error) {
         console.error("Error deleting role:", error);
       }
