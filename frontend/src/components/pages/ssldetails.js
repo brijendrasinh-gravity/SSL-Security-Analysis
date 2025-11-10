@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Spinner } from "react-bootstrap";
 import API from "../../api/api";
-import BackButton from "../common/backbutton"; 
 import SecurityGradeAnalysis from "../result components/securitygradeanalysis";
 import CertificateStatus from "../result components/certificateStatus";
 import Securityissues from "../result components/securityissues";
@@ -58,7 +57,6 @@ function SslReportDetails({ backButton }) {
         <h3 className="text-white fw-bolder mb-0">
           SSL Report Details - {report.domain}
         </h3>
-        {backButton}
       </div>
 
       <SecurityGradeAnalysis result={result} />

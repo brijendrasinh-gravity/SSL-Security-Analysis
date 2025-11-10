@@ -13,6 +13,16 @@ function Sidebar({ isCollapsed }) {
       exact: true
     },
     {
+      path: '/user',
+      icon: Shield,
+      label: 'User'
+    },
+    {
+      path: '/role',
+      icon: Shield,
+      label: 'Role & Permission'
+    },
+    {
       path: '/scan',
       icon: Shield,
       label: 'Scanned Domains'

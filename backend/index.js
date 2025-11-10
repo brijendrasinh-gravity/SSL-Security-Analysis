@@ -5,6 +5,10 @@ const sequelize = require('./config/db')
 
 require('./model/sslReportModel');
 require('./model/userModel');
+require('./model/moduleModel');
+require('./model/permissionModel');
+require('./model/rolePermissionModel');
+require('./model/rolesModel');
 
 
 app.use(cors())
@@ -13,6 +17,9 @@ app.use(express.json());
 
 const sslRoutes = require('./routes/sslCertiRoutes');
 app.use('/sslanalysis', sslRoutes);
+
+const roleRoutes = require('./routes/role based/roleRoutes');
+app.use('/roles', roleRoutes);
 
 
 sequelize.authenticate()
@@ -27,7 +34,5 @@ app.get('/', (req, res) => res.send('SSL web server is live'));
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
-});  
-
-
+});
 
