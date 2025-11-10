@@ -69,6 +69,7 @@ const handleSubmit = async (e) => {
     };
 
     const res = await API.post("/roles/create-role", payload);
+    console.log(res);
 
     alert("Role created successfully!");
     navigate("/role");
