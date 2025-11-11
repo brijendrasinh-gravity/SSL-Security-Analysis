@@ -15,6 +15,7 @@ function SslReportsAnalysis() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // eslint-disable-next-line
     fetchReports(page);
   }, [page, perPage]);
 

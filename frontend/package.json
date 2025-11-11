@@ -13,6 +13,7 @@
     "axios": "^1.13.0",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
+    "formik": "^2.4.9",
     "lucide-react": "^0.548.0",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
@@ -21,7 +22,8 @@
     "react-router-dom": "^7.9.4",
     "react-scripts": "5.0.1",
     "tailwindcss": "^4.1.16",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "yup": "^1.7.1"
   },
   "scripts": {
     "start": "react-scripts start",

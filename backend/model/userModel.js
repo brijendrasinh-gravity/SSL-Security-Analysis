@@ -22,6 +22,10 @@ const User = sequelize.define(
     email: {
       type: DataTypes.STRING,
     },
+    profile_image: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     phone_number: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -29,6 +33,10 @@ const User = sequelize.define(
     description: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    cb_deleted: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     status: {
       type: DataTypes.BOOLEAN,

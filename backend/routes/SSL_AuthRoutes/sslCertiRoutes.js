@@ -1,8 +1,8 @@
 const express = require('express');
-const sslCertiController = require('../controller/sslCertiController');
-const sslCrudController = require('../controller/sslCrudController');
-const authController = require('../controller/authController');
-const auth = require('../middleware/authMiddleware');
+const sslCertiController = require('../../controller/sslCertiController');
+const sslCrudController = require('../../controller/sslCrudController');
+const authController = require('../../controller/Authentication/authController');
+const auth = require('../../middleware/authMiddleware');
 const router = express.Router();
 
 //SSL analysis and its CRUD

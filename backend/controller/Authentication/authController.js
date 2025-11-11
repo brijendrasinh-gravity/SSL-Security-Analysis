@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const sequelize = require('../config/db');
-const Sslreports = require('../model/sslReportModel');
-const User = require('../model/userModel');
+const sequelize = require('../../config/db');
+const Sslreports = require('../../model/sslReportModel');
+const User = require('../../model/userModel');
 const nodemailer = require("nodemailer");
 
 // Nodemailer Transporter (using Gmail)
@@ -75,7 +75,7 @@ exports.registration = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
+exports.loginOld = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
@@ -98,6 +98,54 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    if (!user.status) {
+      return res.status(403).json({
+        error: "Your account is inactive. Please contact your ADMIN.",
+      });
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+
+    const token = jwt.sign(
+      {
+        user_id: user.id,
+        email: user.email,
+      },
+      process.env.JWT_SECRETTOKEN,
+      { expiresIn: "1h" }
+    );
+
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        user_name: user.user_name,
+        role_id: user.role_id,
+        status: user.status,
+      },
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 
 exports.changePassword = async (req, res) => {
   try {

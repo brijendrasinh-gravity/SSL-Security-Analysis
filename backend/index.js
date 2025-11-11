@@ -14,12 +14,18 @@ require('./model/rolesModel');
 app.use(cors())
 app.use(express.json());
 
+const path = require("path");
+app.use("/uploads", express.static(path.join(__dirname, "middleware/uploads")));
 
-const sslRoutes = require('./routes/sslCertiRoutes');
+
+const sslRoutes = require('./routes/SSL_AuthRoutes/sslCertiRoutes');
 app.use('/sslanalysis', sslRoutes);
 
-const roleRoutes = require('./routes/role based/roleRoutes');
+const roleRoutes = require('./routes/role_permission module/roleRoutes');
 app.use('/roles', roleRoutes);
+
+const userModuleRoutes = require('./routes/user module/userModuleRoutes');
+app.use('/users', userModuleRoutes);
 
 
 sequelize.authenticate()

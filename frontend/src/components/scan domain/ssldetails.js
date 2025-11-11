@@ -14,7 +14,9 @@ function SslReportDetails({ backButton }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) fetchReportById();
+    if (id) 
+      // eslint-disable-next-line
+      fetchReportById();
   }, [id]);
 
   const fetchReportById = async () => {

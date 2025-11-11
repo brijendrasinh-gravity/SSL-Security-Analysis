@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, Spinner, Button, Alert, Form, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Phone, FileText, Calendar, Lock, Save, Shield } from "lucide-react";
-import API from "../api/api";
+import API from "../../api/api";
 
 function Profile() {
   const [user, setUser] = useState(null);
