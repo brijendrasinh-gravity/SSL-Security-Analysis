@@ -19,6 +19,8 @@ import {
   ToggleLeft,
   ToggleRight,
 } from "lucide-react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import API from "../../../api/api";
 import AddUserModal from "./AddUserModal";
@@ -79,14 +81,39 @@ function UserManager() {
   // Toggle user status
   const handleToggleStatus = async (id) => {
     try {
-      const updatedUsers = users.map((user) =>
-        user.id === id ? { ...user, status: !user.status } : user
+      const user = users.find((u) => u.id === id);
+      const prevStatus = user.status ? "Active" : "Inactive";
+      const newStatus = !user.status ? "Active" : "Inactive";
+
+      // Optimistic UI update
+      const updatedUsers = users.map((u) =>
+        u.id === id ? { ...u, status: !u.status } : u
       );
       setUsers(updatedUsers);
+
+      // Backend call
       await API.patch(`/users/toggle-status/${id}`);
+
+      // toast.success(`Status changed from ${prevStatus} → ${newStatus}`, {
+      //   position: "top-right",
+      //   autoClose: 3000,
+      //   hideProgressBar: false,
+      //   closeOnClick: true,
+      //   pauseOnHover: true,
+      //   draggable: true,
+      // });
+      toast.info(`Status updated: ${prevStatus} → ${newStatus}`, {
+        icon: "🔄",
+        theme: "colored",
+        position: "top-right",
+        autoClose: 3000,
+      });
     } catch (error) {
       console.error("Error toggling status:", error);
-      alert("Failed to update status.");
+      toast.error("Failed to update user status!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
       fetchUsers();
     }
   };
@@ -177,6 +204,7 @@ function UserManager() {
 
   return (
     <div className="container mt-4">
+      <ToastContainer />
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded shadow-sm">
         <div>
@@ -343,6 +371,5 @@ function UserManager() {
     </div>
   );
 }
-
 
 export default UserManager;

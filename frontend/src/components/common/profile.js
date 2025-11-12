@@ -1,51 +1,47 @@
-import { useEffect, useState } from "react";
-import { Card, Spinner, Button, Alert, Form, Row, Col } from "react-bootstrap";
+import { useContext, useState, useEffect } from "react";
+import { Card, Spinner, Button, Alert, Form, Row, Col, Toast } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Phone, FileText, Calendar, Lock, Save, Shield } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  FileText,
+  Calendar,
+  Lock,
+  Save,
+  Shield,
+} from "lucide-react";
+import { UserContext } from "../../context/usercontext";
 import API from "../../api/api";
 
 function Profile() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, setUser } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();
 
+  //  Prefill formData when context user becomes available
   useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Not authenticated. Please login.");
-        setLoading(false);
-        return;
-      }
-
-      const res = await API.get("/sslanalysis/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.data?.success) {
-        setUser(res.data.data);
-      } else {
-        setError(res.data?.message || "Failed to load profile");
-      }
-    } catch (err) {
-      console.error("Error fetching profile:", err);
-      setError(err.response?.data?.message || err.message || "Server error");
-    } finally {
-      setLoading(false);
+    if (user) {
+      setFormData(user);
     }
-  };
+  }, [user]);
+
+  // Show loader if user context not ready yet
+  if (!user || !formData.user_name) {
+    return (
+      <div className="text-center mt-5">
+        <Spinner animation="border" />
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
-    setUser({ ...user, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleUpdate = async (e) => {
@@ -59,16 +55,20 @@ function Profile() {
       const res = await API.put(
         "/sslanalysis/updateprofile",
         {
-          user_name: user.user_name,
-          phone_number: user.phone_number,
-          description: user.description,
+          user_name: formData.user_name,
+          phone_number: formData.phone_number,
+          description: formData.description,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (res.data.success) {
         setMessage("Profile updated successfully!");
-        fetchProfile(); // refresh when data is updated
+
+        //  Update context + localStorage with the new data
+        const updatedUser = { ...user, ...formData };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
       } else {
         setError(res.data.message || "Failed to update profile");
       }
@@ -79,30 +79,6 @@ function Profile() {
       setSaving(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="text-center mt-5">
-        <Spinner animation="border" /> <p>Loading profile...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mt-5">
-        <Alert variant="danger">{error}</Alert>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="container mt-5">
-        <Alert variant="warning">No profile data available.</Alert>
-      </div>
-    );
-  }
 
   return (
     <div className="container mt-4" style={{ maxWidth: "900px" }}>
@@ -118,21 +94,27 @@ function Profile() {
         <Col lg={4} className="mb-4">
           <Card className="shadow-sm border-0 text-center">
             <Card.Body className="p-4">
-              <div 
+              <div
                 className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3"
-                style={{ width: '100px', height: '100px', fontSize: '36px', fontWeight: '600' }}
+                style={{
+                  width: "100px",
+                  height: "100px",
+                  fontSize: "36px",
+                  fontWeight: "600",
+                }}
               >
-                {user.user_name?.charAt(0).toUpperCase() || 'U'}
+                {formData.user_name?.charAt(0).toUpperCase() || "U"}
               </div>
-              <h5 className="fw-bold mb-1">{user.user_name || "User"}</h5>
-              <p className="text-muted small mb-3">{user.email || ""}</p>
+              <h5 className="fw-bold mb-1">{formData.user_name || "User"}</h5>
+              <p className="text-muted small mb-3">{formData.email || ""}</p>
               <div className="d-flex align-items-center justify-content-center text-muted small">
                 <Calendar size={14} className="me-2" />
                 <span>
-                  Member since {user.createdAt 
-                    ? new Date(user.createdAt).toLocaleDateString("en-US", { 
-                        month: "short", 
-                        year: "numeric" 
+                  Member since{" "}
+                  {formData.createdAt
+                    ? new Date(formData.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "numeric",
                       })
                     : "N/A"}
                 </span>
@@ -164,7 +146,7 @@ function Profile() {
                   <Form.Control
                     type="text"
                     name="user_name"
-                    value={user.user_name || ""}
+                    value={formData.user_name || ""}
                     onChange={handleChange}
                     placeholder="Enter your name"
                     size="lg"
@@ -178,7 +160,7 @@ function Profile() {
                   </Form.Label>
                   <Form.Control
                     type="email"
-                    value={user.email || ""}
+                    value={formData.email || ""}
                     readOnly
                     size="lg"
                     className="bg-light"
@@ -196,7 +178,7 @@ function Profile() {
                   <Form.Control
                     type="text"
                     name="phone_number"
-                    value={user.phone_number || ""}
+                    value={formData.phone_number || ""}
                     onChange={handleChange}
                     placeholder="Enter your phone number"
                     size="lg"
@@ -212,7 +194,7 @@ function Profile() {
                     as="textarea"
                     rows={4}
                     name="description"
-                    value={user.description || ""}
+                    value={formData.description || ""}
                     onChange={handleChange}
                     placeholder="Tell us something about yourself"
                     size="lg"
@@ -229,7 +211,11 @@ function Profile() {
                   >
                     {saving ? (
                       <>
-                        <Spinner animation="border" size="sm" className="me-2" />
+                        <Spinner
+                          animation="border"
+                          size="sm"
+                          className="me-2"
+                        />
                         Updating...
                       </>
                     ) : (

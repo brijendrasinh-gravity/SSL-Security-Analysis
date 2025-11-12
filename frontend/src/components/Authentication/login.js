@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Form, Button, Alert, Spinner, Card, Row, Col } from "react-bootstrap";
 import { useNavigate, Link } from "react-router-dom";
 import { LogIn, Shield, Mail, Lock } from "lucide-react";
 import API from "../../api/api";
+import { UserContext } from "../../context/usercontext";
 
 function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const navigate = useNavigate();
+
+  const { setUser } = useContext(UserContext);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,9 +24,17 @@ function Login() {
 
     try {
       const response = await API.post("/sslanalysis/login", formData);
-      localStorage.setItem("token", response.data.token);
-      setMessage({ type: "success", text: "Login successful!" });
-      setTimeout(() => navigate("/"), 1500);
+      if(response.data?.token && response.data?.user){
+
+        localStorage.setItem("token", response.data.token);
+
+        setUser(response.data.user);
+
+        setMessage({type:"success", text:"login is successfull"})
+        setTimeout(() => navigate('/'), 1500)
+      }else {
+        setMessage({type:"danger", text:"invalid login response"})  
+      }
     } catch (err) {
       setMessage({
         type: "danger",

@@ -1,22 +1,30 @@
-import { Dropdown, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { User, LogOut, Settings, Menu } from 'lucide-react';
+import { useContext } from "react";
+import { Dropdown, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { User, LogOut, Settings, Menu } from "lucide-react";
+import { UserContext } from "../../context/usercontext";
 
 function Header({ isCollapsed, toggleSidebar }) {
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
+  const { user, clearUser } = useContext(UserContext); //  Access global user
+
+  const token = localStorage.getItem("token");
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
+    localStorage.removeItem("token");
+    clearUser(); //  Clear user from context
+    navigate("/login");
   };
 
+  // Helper to get first letter for avatar circle
+  const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : "U");
+
   return (
-    <header 
+    <header
       className="bg-white border-bottom position-sticky top-0"
-      style={{ 
-        zIndex: 1020, 
-        height: '70px'
+      style={{
+        zIndex: 1020,
+        height: "70px",
       }}
     >
       <div className="d-flex align-items-center justify-content-between h-100 px-4">
@@ -33,61 +41,73 @@ function Header({ isCollapsed, toggleSidebar }) {
         <div className="d-flex align-items-center gap-3">
           {!token ? (
             <div className="d-flex gap-2">
-              <Button 
+              <Button
                 variant="outline-primary"
                 size="sm"
-                onClick={() => navigate('/register')}
+                onClick={() => navigate("/register")}
               >
                 Register
               </Button>
-              <Button 
+              <Button
                 variant="primary"
                 size="sm"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
               >
                 Login
               </Button>
             </div>
           ) : (
             <Dropdown align="end">
-              <Dropdown.Toggle 
+              <Dropdown.Toggle
                 as="div"
                 className="d-flex align-items-center"
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: "pointer" }}
               >
-                <div 
+                <div
                   className="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white"
-                  style={{ width: '36px', height: '36px', fontSize: '14px', fontWeight: '600' }}
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
                 >
-                  U
+                  {getInitial(user?.user_name)}
                 </div>
               </Dropdown.Toggle>
 
-              <Dropdown.Menu className="shadow border-0 mt-2" style={{ minWidth: '200px' }}>
+              <Dropdown.Menu
+                className="shadow border-0 mt-2"
+                style={{ minWidth: "200px" }}
+              >
                 <div className="px-3 py-2 border-bottom">
-                  <div className="fw-semibold text-dark">User Name</div>
-                  <div className="text-muted small">user@example.com</div>
+                  <div className="fw-semibold text-dark">
+                    {user?.user_name || "User Name"}
+                  </div>
+                  <div className="text-muted small">
+                    {user?.email || "user@example.com"}
+                  </div>
                 </div>
-                
-                <Dropdown.Item 
-                  onClick={() => navigate('/profile')}
+
+                {/* <Dropdown.Item
+                  onClick={() => navigate("/profile")}
                   className="d-flex align-items-center py-2"
                 >
                   <User size={16} className="me-3 text-muted" />
                   My Profile
                 </Dropdown.Item>
-                
-                <Dropdown.Item 
-                  onClick={() => navigate('/change-password')}
+
+                <Dropdown.Item
+                  onClick={() => navigate("/change-password")}
                   className="d-flex align-items-center py-2"
                 >
                   <Settings size={16} className="me-3 text-muted" />
                   Settings
-                </Dropdown.Item>
-                
+                </Dropdown.Item> */}
+
                 <Dropdown.Divider />
-                
-                <Dropdown.Item 
+
+                <Dropdown.Item
                   onClick={handleLogout}
                   className="d-flex align-items-center py-2 text-danger"
                 >
