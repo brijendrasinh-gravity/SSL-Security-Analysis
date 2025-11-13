@@ -66,6 +66,7 @@ exports.registration = async (req, res) => {
       user_name,
       email,
       password: hashedPassword,
+      is_first_time: false
     });
 
     sendWelcomeEmail(newUser.email, newUser.user_name).catch((err)=>
@@ -86,6 +87,16 @@ exports.login = async (req, res) => {
 
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+     if (user.is_first_time) {
+      return res.status(403).json({
+        success: false,
+        is_first_time: true,
+        userId: user.id,
+        email: user.email,
+        message: "First-time login detected. Please set your new password."
+      });
     }
 
     if (!user.status) {
@@ -271,5 +282,97 @@ exports.resetForgotPassword = async (req, res) => {
   } catch (err) {
     console.error("Reset Password Error:", err);
     res.status(500).json({ error: "Server error while resetting password" });
+  }
+};
+
+exports.firstTimeLoginCheck = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Email not found",
+      });
+    }
+
+    if (!user.is_first_time) {
+      return res.status(400).json({
+        success: false,
+        message: "This user has already set a password. Please login normally.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "First-time login email verified",
+      userId: user.id,
+      email: user.email,
+    });
+
+  } catch (error) {
+    console.error("Error verifying first-time login:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.setNewPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email, newPassword, confirmPassword } = req.body;
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.email !== email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email does not match the user account",
+      });
+    }
+
+    if (!user.is_first_time) {
+      return res.status(400).json({
+        success: false,
+        message: "This user has already set a password",
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    user.is_first_time = false;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password created successfully. Please login now.",
+    });
+
+  } catch (error) {
+    console.error("Error setting new password:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };

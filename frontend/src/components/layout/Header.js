@@ -4,19 +4,18 @@ import { useNavigate } from "react-router-dom";
 import { User, LogOut, Settings, Menu } from "lucide-react";
 import { UserContext } from "../../context/usercontext";
 
-function Header({ isCollapsed, toggleSidebar }) {
+function Header({ toggleSidebar }) {
   const navigate = useNavigate();
-  const { user, clearUser } = useContext(UserContext); //  Access global user
+  const { user, clearUser } = useContext(UserContext);
 
   const token = localStorage.getItem("token");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    clearUser(); //  Clear user from context
+    clearUser();
     navigate("/login");
   };
 
-  // Helper to get first letter for avatar circle
   const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : "U");
 
   return (
@@ -60,9 +59,12 @@ function Header({ isCollapsed, toggleSidebar }) {
             <Dropdown align="end">
               <Dropdown.Toggle
                 as="div"
-                className="d-flex align-items-center"
+                className="d-flex align-items-center gap-2"
                 style={{ cursor: "pointer" }}
               >
+                <span className="text-dark fw-semibold d-none d-md-inline">
+                  {user?.user_name || "User"}
+                </span>
                 <div
                   className="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white"
                   style={{
@@ -78,23 +80,14 @@ function Header({ isCollapsed, toggleSidebar }) {
 
               <Dropdown.Menu
                 className="shadow border-0 mt-2"
-                style={{ minWidth: "200px" }}
+                style={{ minWidth: "180px" }}
               >
-                <div className="px-3 py-2 border-bottom">
-                  <div className="fw-semibold text-dark">
-                    {user?.user_name || "User Name"}
-                  </div>
-                  <div className="text-muted small">
-                    {user?.email || "user@example.com"}
-                  </div>
-                </div>
-
-                {/* <Dropdown.Item
+                <Dropdown.Item
                   onClick={() => navigate("/profile")}
                   className="d-flex align-items-center py-2"
                 >
                   <User size={16} className="me-3 text-muted" />
-                  My Profile
+                  Profile
                 </Dropdown.Item>
 
                 <Dropdown.Item
@@ -103,7 +96,7 @@ function Header({ isCollapsed, toggleSidebar }) {
                 >
                   <Settings size={16} className="me-3 text-muted" />
                   Settings
-                </Dropdown.Item> */}
+                </Dropdown.Item>
 
                 <Dropdown.Divider />
 

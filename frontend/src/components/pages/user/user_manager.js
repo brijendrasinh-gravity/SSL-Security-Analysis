@@ -21,14 +21,13 @@ import {
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from "react-router-dom";
 import API from "../../../api/api";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 import ViewUserModal from "./viewUserModal";
 
 function UserManager() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -151,11 +150,11 @@ function UserManager() {
           style={{ cursor: "pointer" }}
         >
           {row.status ? (
-            <span className="badge bg-success d-flex align-items-center gap-1">
+            <span className="badge bg-success d-flex align-items-center gap-1" style={{transition:"none"}}>
               <ToggleRight size={16} /> Active
             </span>
           ) : (
-            <span className="badge bg-secondary d-flex align-items-center gap-1">
+            <span className="badge bg-secondary d-flex align-items-center gap-1" style={{transition:"none"}}>
               <ToggleLeft size={16} /> Inactive
             </span>
           )}

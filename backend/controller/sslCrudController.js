@@ -2,6 +2,8 @@ const sequelize = require("../config/db");
 const Sslreports = require("../model/sslReportModel");
 const User = require('../model/userModel');
 const { Op } = require("sequelize");
+const path = require("path");
+const fs = require("fs");
 
 
 //before fixing 

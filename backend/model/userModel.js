@@ -30,6 +30,10 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    is_first_time:{
+      type:DataTypes.BOOLEAN,
+      defaultValue:true
+    },
     description: {
       type: DataTypes.TEXT,
       allowNull: true,

@@ -52,15 +52,18 @@ exports.getReportByidSchema = Joi.object({
 });
 
 exports.deleteReportByid = Joi.object({
-  id:Joi.number().integer().positive().required(),   
-})
+  id: Joi.number().integer().positive().required(),
+});
 
 exports.updateProfileSchema = Joi.object({
   user_name: Joi.string().min(3).max(50).required(),
-  phone_number: Joi.string().pattern(/^[0-9]{10}$/).required().messages({
-    "string.pattern.base": "Phone number must be 10 digits",
-  }),
-  description: Joi.string().allow(null, "").max(255)
+  phone_number: Joi.string()
+    .pattern(/^[0-9]{10}$/)
+    .required()
+    .messages({
+      "string.pattern.base": "Phone number must be 10 digits",
+    }),
+  description: Joi.string().allow(null, "").max(255),
 });
 
 exports.forgotPasswordSchema = Joi.object({
@@ -69,7 +72,6 @@ exports.forgotPasswordSchema = Joi.object({
   }),
 });
 
-
 exports.forgotResetPasswordSchema = Joi.object({
   email: Joi.string().email().required(),
   newpassword: Joi.string()
@@ -77,6 +79,40 @@ exports.forgotResetPasswordSchema = Joi.object({
     .pattern(/^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])/)
     .required()
     .messages({
-      "string.pattern.base": "Password must include uppercase, lowercase, and number",
+      "string.pattern.base":
+        "Password must include uppercase, lowercase, and number",
+    }),
+});
+
+exports.firstTimeLoginCheckSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.empty": "Email is required",
+    "string.email": "Please enter a valid email address",
+  }),
+});
+
+exports.setNewPasswordSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.empty": "Email is required",
+    "string.email": "Invalid email format",
+  }),
+
+  newPassword: Joi.string()
+    .min(6)
+    .pattern(/^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])/)
+    .required()
+    .messages({
+      "string.empty": "New password is required",
+      "string.min": "New password must be at least 6 characters long",
+      "string.pattern.base":
+        "Password must include uppercase, lowercase and a number",
+    }),
+
+  confirmPassword: Joi.string()
+    .valid(Joi.ref("newPassword"))
+    .required()
+    .messages({
+      "any.only": "Passwords must match",
+      "string.empty": "Confirm password is required",
     }),
 });

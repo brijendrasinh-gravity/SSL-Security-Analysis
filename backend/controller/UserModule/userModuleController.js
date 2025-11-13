@@ -77,6 +77,7 @@ exports.createUser = async (req, res) => {
       role_id,
       status,
       profile_image: imagePath,
+      is_first_time:true
     });
 
 

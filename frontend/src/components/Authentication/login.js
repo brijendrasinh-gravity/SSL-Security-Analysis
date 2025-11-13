@@ -24,16 +24,32 @@ function Login() {
 
     try {
       const response = await API.post("/sslanalysis/login", formData);
-      if(response.data?.token && response.data?.user){
+      
+      // Check if first-time login
+      if (response.data?.is_first_time) {
+        setMessage({
+          type: "info",
+          text: "First-time login detected. Redirecting to set password...",
+        });
+        setTimeout(() => {
+          navigate("/set-first-time-password", {
+            state: {
+              userId: response.data.userId,
+              email: response.data.email,
+            },
+          });
+        }, 1500);
+        return;
+      }
 
+      // Normal login flow
+      if (response.data?.token && response.data?.user) {
         localStorage.setItem("token", response.data.token);
-
         setUser(response.data.user);
-
-        setMessage({type:"success", text:"login is successfull"})
-        setTimeout(() => navigate('/'), 1500)
-      }else {
-        setMessage({type:"danger", text:"invalid login response"})  
+        setMessage({ type: "success", text: "Login is successful" });
+        setTimeout(() => navigate("/"), 1500);
+      } else {
+        setMessage({ type: "danger", text: "Invalid login response" });
       }
     } catch (err) {
       setMessage({
@@ -140,6 +156,16 @@ function Login() {
                     className="text-primary text-decoration-none fw-semibold"
                   >
                     Create Account
+                  </Link>
+                </div>
+
+                <div className="text-center mt-2">
+                  <span className="text-muted">First time user? </span>
+                  <Link
+                    to="/first-time-login"
+                    className="text-primary text-decoration-none fw-semibold"
+                  >
+                    Set Password
                   </Link>
                 </div>
               </Card.Body>

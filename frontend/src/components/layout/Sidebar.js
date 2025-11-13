@@ -1,6 +1,6 @@
 import { Nav, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Shield, User, Settings } from 'lucide-react';
+import { Home, Shield, User } from 'lucide-react';
 
 function Sidebar({ isCollapsed }) {
   const location = useLocation();
@@ -14,7 +14,7 @@ function Sidebar({ isCollapsed }) {
     },
     {
       path: '/user',
-      icon: Shield,
+      icon: User,
       label: 'User'
     },
     {
@@ -26,16 +26,6 @@ function Sidebar({ isCollapsed }) {
       path: '/scan',
       icon: Shield,
       label: 'Scanned Domains'
-    },
-    {
-      path: '/profile',
-      icon: User,
-      label: 'Profile'
-    },
-    {
-      path: '/change-password',
-      icon: Settings,
-      label: 'Settings'
     }
   ];
 

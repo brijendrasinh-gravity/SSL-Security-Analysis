@@ -171,9 +171,10 @@ header {
 }
 
 /* Notification Badge Animation */
-.badge {
+/* Removed this status animation of user_manager */
+/* .badge {
   animation: pulse 2s infinite;
-}
+} */
 
 @keyframes pulse {
   0% {
