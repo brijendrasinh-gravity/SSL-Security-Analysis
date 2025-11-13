@@ -214,9 +214,50 @@ exports.getProfile = async (req, res) => {
 };
 
 
+// exports.updateProfile = async (req, res) => {
+//   try {
+//     const userId = req.user.user_id; 
+//     const { user_name, phone_number, description } = req.body;
+
+//     if (!userId) {
+//       return res.status(401).json({ success: false, message: "Unauthorized access" });
+//     }
+
+//     const user = await User.findByPk(userId);
+
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: "User not found" });
+//     }
+
+//     if (user_name) user.user_name = user_name;
+//     if (phone_number) user.phone_number = phone_number;
+//     if (description) user.description = description;
+
+//     await user.save();
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Profile updated successfully",
+//       updatedData: {
+//         user_name: user.user_name,
+//         phone_number: user.phone_number,
+//         description: user.description,
+//         email: user.email,
+//       }
+//     });
+//   } catch (err) {
+//     console.error("Profile update error:", err);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error while updating profile",
+//       error: err.message,
+//     });
+//   }
+// };
+
 exports.updateProfile = async (req, res) => {
   try {
-    const userId = req.user.user_id; 
+    const userId = req.user.user_id;
     const { user_name, phone_number, description } = req.body;
 
     if (!userId) {
@@ -224,26 +265,46 @@ exports.updateProfile = async (req, res) => {
     }
 
     const user = await User.findByPk(userId);
-
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    if (user_name) user.user_name = user_name;
-    if (phone_number) user.phone_number = phone_number;
-    if (description) user.description = description;
+    //Handle new image upload if present
+    let imagePath = user.profile_image;
+
+    if (req.file) {
+      // Delete old image if exists
+      if (user.profile_image) {
+        const oldImagePath = path.join(__dirname, "../../", user.profile_image);
+        fs.unlink(oldImagePath, (err) => {
+          if (err) console.warn("Old image not found or already deleted:", err.message);
+        });
+      }
+
+      // Save new uploaded image path
+      imagePath = `/uploads/profile_images/${req.file.filename}`;
+    }
+
+    //Update fields (only provided ones)
+    user.user_name = user_name ?? user.user_name;
+    user.phone_number = phone_number ?? user.phone_number;
+    user.description = description ?? user.description;
+    user.profile_image = imagePath;
 
     await user.save();
 
+    //Updated response
     res.status(200).json({
       success: true,
       message: "Profile updated successfully",
       updatedData: {
+        id: user.id,
         user_name: user.user_name,
+        email: user.email,
         phone_number: user.phone_number,
         description: user.description,
-        email: user.email,
-      }
+        profile_image: user.profile_image,
+      },
     });
   } catch (err) {
     console.error("Profile update error:", err);

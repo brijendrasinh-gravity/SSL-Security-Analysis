@@ -1,5 +1,14 @@
 import { useContext, useState, useEffect } from "react";
-import { Card, Spinner, Button, Alert, Form, Row, Col, Toast } from "react-bootstrap";
+import {
+  Card,
+  Spinner,
+  Button,
+  Alert,
+  Form,
+  Row,
+  Col,
+  Toast,
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -22,6 +31,8 @@ function Profile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [newImage, setNewImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   //  Prefill formData when context user becomes available
   useEffect(() => {
@@ -52,23 +63,37 @@ function Profile() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await API.put(
-        "/sslanalysis/updateprofile",
-        {
-          user_name: formData.user_name,
-          phone_number: formData.phone_number,
-          description: formData.description,
+
+      const formDataToSend = new FormData();
+      formDataToSend.append("user_name", formData.user_name);
+      formDataToSend.append("phone_number", formData.phone_number);
+      formDataToSend.append("description", formData.description);
+
+      if (newImage) {
+        formDataToSend.append("profile_image", newImage);
+      }
+
+      const res = await API.put("/sslanalysis/updateprofile", formDataToSend, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      });
 
       if (res.data.success) {
         setMessage("Profile updated successfully!");
 
-        //  Update context + localStorage with the new data
-        const updatedUser = { ...user, ...formData };
+        const updatedUser = {
+          ...user,
+          ...formData,
+          profile_image:
+            res.data.updatedData.profile_image || user.profile_image,
+        };
+
         setUser(updatedUser);
         localStorage.setItem("user", JSON.stringify(updatedUser));
+
+        setNewImage(null);
       } else {
         setError(res.data.message || "Failed to update profile");
       }
@@ -90,124 +115,152 @@ function Profile() {
         <p className="text-muted">Manage your account information</p>
       </div>
 
-      <Row>
-        <Col lg={4} className="mb-4">
-          <Card className="shadow-sm border-0 text-center">
-            <Card.Body className="p-4">
-              <div
-                className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3"
-                style={{
-                  width: "100px",
-                  height: "100px",
-                  fontSize: "36px",
-                  fontWeight: "600",
+      <Row className="g-4">
+        {/* LEFT PROFILE CARD */}
+        <Col lg={4}>
+          <Card className="shadow-sm border-0 text-center p-4">
+            <div>
+              {previewImage ||
+              (formData.profile_image && formData.profile_image !== "null") ? (
+                <img
+                  src={
+                    previewImage ||
+                    `http://localhost:7000${formData.profile_image}`
+                  }
+                  alt="Profile"
+                  className="rounded-circle border shadow-sm"
+                  style={{
+                    width: "140px",
+                    height: "140px",
+                    objectFit: "cover",
+                  }}
+                />
+              ) : (
+                <div
+                  className="rounded-circle bg-primary d-flex justify-content-center align-items-center text-white shadow-sm"
+                  style={{
+                    width: "140px",
+                    height: "140px",
+                    fontSize: "48px",
+                    fontWeight: "600",
+                  }}
+                >
+                  {formData.user_name?.charAt(0).toUpperCase() || "U"}
+                </div>
+              )}
+            </div>
+
+            {/* Upload Input */}
+            <div className="mt-3">
+              <Form.Label className="fw-semibold">
+                Change Profile Photo
+              </Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    setNewImage(file);
+                    setPreviewImage(URL.createObjectURL(file));
+                  }
                 }}
-              >
-                {formData.user_name?.charAt(0).toUpperCase() || "U"}
-              </div>
-              <h5 className="fw-bold mb-1">{formData.user_name || "User"}</h5>
-              <p className="text-muted small mb-3">{formData.email || ""}</p>
-              <div className="d-flex align-items-center justify-content-center text-muted small">
-                <Calendar size={14} className="me-2" />
-                <span>
-                  Member since{" "}
-                  {formData.createdAt
-                    ? new Date(formData.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        year: "numeric",
-                      })
-                    : "N/A"}
-                </span>
-              </div>
-            </Card.Body>
+              />
+            </div>
+
+            <h5 className="fw-bold mt-3 mb-0">{formData.user_name}</h5>
+            <p className="text-muted small mb-2">{formData.email}</p>
+
+            <div className="text-muted small">
+              <Calendar size={14} className="me-1" />
+              Member since{" "}
+              {formData.createdAt
+                ? new Date(formData.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "N/A"}
+            </div>
           </Card>
         </Col>
 
+        {/* RIGHT FORM CARD */}
         <Col lg={8}>
           <Card className="shadow-sm border-0">
             <Card.Body className="p-4">
-              {message && (
-                <Alert variant="success" className="mb-4">
-                  {message}
-                </Alert>
-              )}
-              {error && (
-                <Alert variant="danger" className="mb-4">
-                  {error}
-                </Alert>
-              )}
+              {message && <Alert variant="success">{message}</Alert>}
+              {error && <Alert variant="danger">{error}</Alert>}
+
+              <h5 className="fw-bold mb-3">Profile Information</h5>
 
               <Form onSubmit={handleUpdate}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">
-                    <User size={16} className="me-2" />
-                    Username
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="user_name"
-                    value={formData.user_name || ""}
-                    onChange={handleChange}
-                    placeholder="Enter your name"
-                    size="lg"
-                  />
-                </Form.Group>
+                <Row className="g-3">
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">Username</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="user_name"
+                        value={formData.user_name || ""}
+                        onChange={handleChange}
+                        size="lg"
+                      />
+                    </Form.Group>
+                  </Col>
 
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">
-                    <Mail size={16} className="me-2" />
-                    Email Address
-                  </Form.Label>
-                  <Form.Control
-                    type="email"
-                    value={formData.email || ""}
-                    readOnly
-                    size="lg"
-                    className="bg-light"
-                  />
-                  <Form.Text className="text-muted">
-                    Email cannot be changed
-                  </Form.Text>
-                </Form.Group>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">Email</Form.Label>
+                      <Form.Control
+                        type="email"
+                        value={formData.email || ""}
+                        readOnly
+                        size="lg"
+                        className="bg-light"
+                      />
+                    </Form.Group>
+                  </Col>
 
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">
-                    <Phone size={16} className="me-2" />
-                    Phone Number
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="phone_number"
-                    value={formData.phone_number || ""}
-                    onChange={handleChange}
-                    placeholder="Enter your phone number"
-                    size="lg"
-                  />
-                </Form.Group>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">
+                        Phone Number
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="phone_number"
+                        value={formData.phone_number || ""}
+                        onChange={handleChange}
+                        size="lg"
+                      />
+                    </Form.Group>
+                  </Col>
 
-                <Form.Group className="mb-4">
-                  <Form.Label className="fw-semibold">
-                    <FileText size={16} className="me-2" />
-                    Description
-                  </Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={4}
-                    name="description"
-                    value={formData.description || ""}
-                    onChange={handleChange}
-                    placeholder="Tell us something about yourself"
-                    size="lg"
-                  />
-                </Form.Group>
+                  <Col md={12}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">
+                        Description
+                      </Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        size="lg"
+                        name="description"
+                        value={formData.description || ""}
+                        onChange={handleChange}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-                <div className="d-flex gap-3">
+                {/* Buttons */}
+                <div className="d-flex justify-content-end mt-4 gap-3">
                   <Button
                     type="submit"
                     variant="primary"
-                    disabled={saving}
                     size="lg"
-                    className="fw-semibold flex-grow-1"
+                    disabled={saving}
+                    className="fw-semibold px-4"
                   >
                     {saving ? (
                       <>
@@ -228,9 +281,9 @@ function Profile() {
 
                   <Button
                     variant="outline-primary"
-                    onClick={() => navigate("/change-password")}
                     size="lg"
-                    className="fw-semibold"
+                    className="fw-semibold px-4"
+                    onClick={() => navigate("/change-password")}
                   >
                     <Lock size={18} className="me-2" />
                     Change Password

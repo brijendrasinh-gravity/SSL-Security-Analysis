@@ -93,15 +93,6 @@ function UserManager() {
 
       // Backend call
       await API.patch(`/users/toggle-status/${id}`);
-
-      // toast.success(`Status changed from ${prevStatus} → ${newStatus}`, {
-      //   position: "top-right",
-      //   autoClose: 3000,
-      //   hideProgressBar: false,
-      //   closeOnClick: true,
-      //   pauseOnHover: true,
-      //   draggable: true,
-      // });
       toast.info(`Status updated: ${prevStatus} → ${newStatus}`, {
         icon: "🔄",
         theme: "colored",

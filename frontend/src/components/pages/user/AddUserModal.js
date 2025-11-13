@@ -32,16 +32,36 @@ function AddUserModal({ show, onHide, roles, onUserAdded }) {
       profile_image: null,
     },
     validationSchema: Yup.object({
-      user_name: Yup.string().required("Name is required"),
-      email: Yup.string().email("Invalid email").required("Email is required"),
+      user_name: Yup.string()
+        .min(3, "User name must be at least 3 characters long")
+        .max(50, "User name cannot exceed 50 characters")
+        .required("User name is required"),
+
+      email: Yup.string()
+        .email("Please provide a valid email address")
+        .required("Email is required"),
+
       password: Yup.string()
-        .min(6, "Minimum 6 characters")
+        .min(6, "Password must be at least 6 characters long")
+        .matches(
+          /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])/,
+          "Password must include at least one uppercase letter, one lowercase letter, and one number"
+        )
         .required("Password is required"),
+
       confirm_password: Yup.string()
         .oneOf([Yup.ref("password"), null], "Passwords must match")
         .required("Confirm Password is required"),
-      phone_number: Yup.string().required("Phone number is required"),
-      role_id: Yup.string().required("Select a role"),
+
+      phone_number: Yup.string()
+        .matches(/^[0-9]{10}$/, "Phone number must be exactly 10 digits")
+        .required("Phone number is required"),
+
+      role_id: Yup.number()
+        .typeError("Role ID must be a valid number")
+        .required("Role is required"),
+
+      status: Yup.boolean().default(true),
     }),
     onSubmit: async (values, { resetForm }) => {
       setLoading(true);
@@ -82,8 +102,15 @@ function AddUserModal({ show, onHide, roles, onUserAdded }) {
     }
   };
 
+  const handleCancel = () => {
+  formik.resetForm();
+  setImagePreview(null);
+  onHide();
+};
+
+
   return (
-    <Modal show={show} onHide={onHide} centered size="lg">
+    <Modal show={show} onHide={handleCancel} centered size="lg" backdrop="static" keyboard={false}>
       <Modal.Header closeButton>
         <Modal.Title>Add New User</Modal.Title>
       </Modal.Header>
@@ -169,9 +196,7 @@ function AddUserModal({ show, onHide, roles, onUserAdded }) {
                   />
                   <Button
                     variant="outline-secondary"
-                    onClick={() =>
-                      setShowConfirmPassword(!showConfirmPassword)
-                    }
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     type="button"
                   >
                     {showConfirmPassword ? (
@@ -265,7 +290,7 @@ function AddUserModal({ show, onHide, roles, onUserAdded }) {
           </Row>
 
           <div className="d-flex justify-content-end mt-4">
-            <Button variant="secondary" className="me-2" onClick={onHide}>
+            <Button variant="secondary" className="me-2" onClick={handleCancel}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" disabled={loading}>
