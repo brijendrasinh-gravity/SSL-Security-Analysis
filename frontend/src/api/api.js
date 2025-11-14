@@ -1,4 +1,3 @@
-import React from "react";
 import axios from "axios";
 
 const API = axios.create({
@@ -9,6 +8,11 @@ const API = axios.create({
 });
 
 API.interceptors.request.use((config)=>{
+    // Automatically add token to all requests if it exists
+    const token = localStorage.getItem("token");
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
     console.log("sending req from api", config.url);
     return config;
 },
@@ -25,10 +29,26 @@ API.interceptors.response.use((response)=>{
 (error) => {
     if(error.response){
         console.error("api error", error.response.status, error.response.data);
-        alert(`error: ${error.response.data.error} `);
+        
+        // Handle different error types
+        if (error.response.status === 401) {
+            // Unauthorized - token invalid or expired
+            alert("Session expired. Please login again.");
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "/login";
+        } else if (error.response.status === 403) {
+            // Forbidden - no permission
+            const message = error.response.data.message || "You don't have permission to perform this action.";
+            alert(`Access Denied: ${message}`);
+        } else {
+            // Other errors
+            const errorMsg = error.response.data.error || error.response.data.message || "An error occurred";
+            alert(`Error: ${errorMsg}`);
+        }
     } else{
         console.error("network error", error.message);
-        alert("network error pls try later")
+        alert("Network error. Please try again later.")
     }
     return Promise.reject(error);
 }

@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const sequelize = require('../../config/db');
-const Sslreports = require('../../model/sslReportModel');
 const User = require('../../model/userModel');
+const Role = require('../../model/rolesModel');
+const RolePermission = require('../../model/rolePermissionModel');
 const nodemailer = require("nodemailer");
 
 // Nodemailer Transporter (using Gmail)
@@ -111,6 +111,13 @@ exports.login = async (req, res) => {
     }
 
 
+    // Fetch user's role and permissions
+    const role = await Role.findByPk(user.role_id);
+    const permissions = await RolePermission.findAll({
+      where: { role_id: user.role_id, cb_deleted: false },
+      attributes: ['module_name', 'canList', 'canCreate', 'canModify', 'canDelete']
+    });
+
     const token = jwt.sign(
       {
         user_id: user.id,
@@ -132,7 +139,13 @@ exports.login = async (req, res) => {
         status: user.status,
         phone_number: user.phone_number,
         description: user.description,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        role: {
+          id: role?.id,
+          name: role?.name,
+          is_Admin: role?.is_Admin || false
+        },
+        permissions: permissions || []
       },
     });
   } catch (err) {

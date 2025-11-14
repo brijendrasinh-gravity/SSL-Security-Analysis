@@ -13,21 +13,21 @@ const { checkPermission } = require("../../middleware/checkPermissionMiddleware"
 router.post(
   "/security",
   auth,
-  checkPermission("ssl_scan", "canCreate"),
+  checkPermission("ssl_security", "canCreate"),
   sslCertiController.securityAnalysis
 );
 
 router.get(
   "/getbulkreport",
   auth,
-  checkPermission("ssl_scan", "canList"),
+  checkPermission("ssl_security", "canList"),
   sslCrudController.getAllReports
 );
 
 router.get(
   "/getreportbyid/:id",
   auth,
-  checkPermission("ssl_scan", "canList"),
+  checkPermission("ssl_security", "canList"),
   validateRequest(authSchema.getReportByidSchema),
   sslCrudController.getReportByID
 );
@@ -35,7 +35,7 @@ router.get(
 router.delete(
   "/deletereport/:id",
   auth,
-  checkPermission("ssl_scan", "canDelete"),
+  checkPermission("ssl_security", "canDelete"),
   validateRequest(authSchema.deleteReportByid),
   sslCrudController.deleteReport
 );

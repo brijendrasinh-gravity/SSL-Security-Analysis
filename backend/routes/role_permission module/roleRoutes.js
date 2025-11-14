@@ -9,35 +9,35 @@ const { checkPermission } = require("../../middleware/checkPermissionMiddleware"
 router.post(
   "/create-role",
   auth,
-  checkPermission("role", "canCreate"),
+  checkPermission("role_permission", "canCreate"),
   roleController.createRole
 );
 
 router.get(
   "/get-role",
   auth,
-  checkPermission("role", "canList"),
+  checkPermission("role_permission", "canList"),
   roleController.getAllRoles
 );
 
 router.get(
   "/get-role/:id",
   auth,
-  checkPermission("role", "canList"),
+  checkPermission("role_permission", "canList"),
   roleController.getRoleById
 );
 
 router.put(
   "/update-role/:id",
   auth,
-  checkPermission("role", "canModify"),
+  checkPermission("role_permission", "canModify"),
   roleController.updateRole
 );
 
 router.delete(
   "/delete-role/:id",
   auth,
-  checkPermission("role", "canDelete"),
+  checkPermission("role_permission", "canDelete"),
   roleController.deleteRole
 );
 
@@ -45,7 +45,7 @@ router.delete(
 router.get(
   "/get-module",
   auth,
-  checkPermission("role", "canList"),
+  checkPermission("role_permission", "canList"),
   moduleController.getAllModules
 );
 

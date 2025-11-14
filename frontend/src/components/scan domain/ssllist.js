@@ -4,6 +4,7 @@ import { Button, Spinner, Card, Badge } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { Eye, Trash2, Shield, Globe, Plus } from "lucide-react";
 import API from "../../api/api";
+import { usePermission } from "../../hooks/usePermission";
 
 function SslReportsAnalysis() {
   const [reports, setReports] = useState([]);
@@ -13,6 +14,7 @@ function SslReportsAnalysis() {
   const [perPage, setPerPage] = useState(10);
 
   const navigate = useNavigate();
+  const { hasPermission } = usePermission();
 
   useEffect(() => {
     // eslint-disable-next-line
@@ -116,22 +118,26 @@ function SslReportsAnalysis() {
       center: true,
       cell: (row) => (
         <div className="d-flex gap-2">
-          <Button
-            variant="outline-primary"
-            size="sm"
-            onClick={() => navigate(`/scan/details/${row.id}`)}
-            className="d-flex align-items-center"
-          >
-            <Eye size={14} className="me-1" />
-            View
-          </Button>
-          <Button
-            variant="outline-danger"
-            size="sm"
-            onClick={() => handleDelete(row.id)}
-          >
-            <Trash2 size={14} />
-          </Button>
+          {hasPermission('ssl_security', 'canList') && (
+            <Button
+              variant="outline-primary"
+              size="sm"
+              onClick={() => navigate(`/scan/details/${row.id}`)}
+              className="d-flex align-items-center"
+            >
+              <Eye size={14} className="me-1" />
+              View
+            </Button>
+          )}
+          {hasPermission('ssl_security', 'canDelete') && (
+            <Button
+              variant="outline-danger"
+              size="sm"
+              onClick={() => handleDelete(row.id)}
+            >
+              <Trash2 size={14} />
+            </Button>
+          )}
         </div>
       ),
     },
@@ -210,14 +216,16 @@ function SslReportsAnalysis() {
           <span className="text-muted">Total Reports: </span>
           <span className="fw-bold fs-5">{totalRows}</span>
         </div>
-        <Button 
-          variant="primary"
-          onClick={() => navigate('/')}
-          className="d-flex align-items-center"
-        >
-          <Plus size={18} className="me-2" />
-          New Scan
-        </Button>
+        {hasPermission('ssl_security', 'canCreate') && (
+          <Button 
+            variant="primary"
+            onClick={() => navigate('/')}
+            className="d-flex align-items-center"
+          >
+            <Plus size={18} className="me-2" />
+            New Scan
+          </Button>
+        )}
       </div>
 
       {/* Table Card */}

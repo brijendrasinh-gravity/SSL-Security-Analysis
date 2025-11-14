@@ -54,11 +54,13 @@ function SslReportDetails({ backButton }) {
 
   return (
     <div className="container mt-4">
-
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="text-white fw-bolder mb-0">
-          SSL Report Details - {report.domain}
-        </h3>
+      {/* Header Section */}
+      <div className="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded shadow-sm">
+        <div>
+          <h4 className="mb-0 fw-bold text-primary">SSL Report Details</h4>
+          <small className="text-muted">{report.domain}</small>
+        </div>
+        {backButton}
       </div>
 
       <SecurityGradeAnalysis result={result} />

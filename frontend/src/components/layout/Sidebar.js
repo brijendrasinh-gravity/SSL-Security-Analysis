@@ -1,33 +1,43 @@
 import { Nav, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Shield, User } from 'lucide-react';
+import { usePermission } from '../../hooks/usePermission';
+import sslLogo from '../../assets/images/ssl-logo.png';
 
 function Sidebar({ isCollapsed }) {
   const location = useLocation();
+  const { hasAnyPermission } = usePermission();
 
-  const menuItems = [
+  const allMenuItems = [
     {
       path: '/',
       icon: Home,
       label: 'Dashboard',
-      exact: true
+      exact: true,
+      moduleName: 'ssl_security'
     },
     {
       path: '/user',
       icon: User,
-      label: 'User'
+      label: 'User',
+      moduleName: 'user'
     },
     {
       path: '/role',
       icon: Shield,
-      label: 'Role & Permission'
+      label: 'Role & Permission',
+      moduleName: 'role_permission'
     },
     {
       path: '/scan',
       icon: Shield,
-      label: 'Scanned Domains'
+      label: 'Scanned Domains',
+      moduleName: 'ssl_security'
     }
   ];
+
+  // Filter menu items based on user permissions
+  const menuItems = allMenuItems.filter(item => hasAnyPermission(item.moduleName));
 
   return (
     <div 
@@ -44,24 +54,23 @@ function Sidebar({ isCollapsed }) {
       >
         {!isCollapsed ? (
           <div className="d-flex align-items-center">
-            <div 
-              className="bg-primary rounded d-flex align-items-center justify-content-center me-2"
-              style={{ width: '36px', height: '36px' }}
-            >
-              <Shield size={20} className="text-white" />
-            </div>
+            <img 
+              src={sslLogo} 
+              alt="SSL Security Logo" 
+              style={{ width: '40px', height: '36px', objectFit: 'contain' }}
+              className="me-2"
+            />
             <div>
               <h6 className="mb-0 fw-bold" style={{ fontSize: '14px' }}>SSL Security</h6>
               <small className="text-muted" style={{ fontSize: '11px' }}>Analysis Tool</small>
             </div>
           </div>
         ) : (
-          <div 
-            className="bg-primary rounded d-flex align-items-center justify-content-center"
-            style={{ width: '36px', height: '36px' }}
-          >
-            <Shield size={20} className="text-white" />
-          </div>
+          <img 
+            src={sslLogo} 
+            alt="SSL Security Logo" 
+            style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+          />
         )}
       </div>
       

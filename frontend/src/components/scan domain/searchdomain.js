@@ -2,11 +2,13 @@ import { useState } from "react";
 import API from "../../api/api";
 import { Button, Card, Form, Spinner, Row, Col, Alert } from "react-bootstrap";
 import { Search, Shield, Clock, CheckCircle, Zap, FileText } from "lucide-react";
+import { usePermission } from "../../hooks/usePermission";
 
 function SearchDomain() {
   const [domain, setDomain] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { hasPermission } = usePermission();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,32 +75,39 @@ function SearchDomain() {
                 </Form.Group>
                 
                 <div className="d-grid">
-                  <Button 
-                    type="submit" 
-                    variant="primary" 
-                    disabled={loading || !domain.trim()}
-                    size="lg"
-                    className="fw-semibold"
-                    aria-label={loading ? "Analyzing SSL certificate" : "Analyze SSL certificate"}
-                  >
-                    {loading ? (
-                      <>
-                        <Spinner 
-                          animation="border" 
-                          size="sm" 
-                          className="me-2"
-                          role="status"
-                          aria-hidden="true"
-                        />
-                        Analyzing SSL Certificate...
-                      </>
-                    ) : (
-                      <>
-                        <Search size={18} className="me-2" aria-hidden="true" />
-                        Analyze SSL Certificate
-                      </>
-                    )}
-                  </Button>
+                  {hasPermission('ssl_security', 'canCreate') ? (
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      disabled={loading || !domain.trim()}
+                      size="lg"
+                      className="fw-semibold"
+                      aria-label={loading ? "Analyzing SSL certificate" : "Analyze SSL certificate"}
+                    >
+                      {loading ? (
+                        <>
+                          <Spinner 
+                            animation="border" 
+                            size="sm" 
+                            className="me-2"
+                            role="status"
+                            aria-hidden="true"
+                          />
+                          Analyzing SSL Certificate...
+                        </>
+                      ) : (
+                        <>
+                          <Search size={18} className="me-2" aria-hidden="true" />
+                          Analyze SSL Certificate
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Alert variant="warning" className="mb-0">
+                      <Shield size={18} className="me-2" />
+                      You don't have permission to scan domains. Please contact your administrator.
+                    </Alert>
+                  )}
                 </div>
               </Form>
 

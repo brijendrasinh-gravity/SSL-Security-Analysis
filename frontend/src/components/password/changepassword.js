@@ -37,10 +37,7 @@ function ChangePassword() {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await API.post("/sslanalysis/changepassword", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await API.post("/sslanalysis/changepassword", formData);
       setMessage({ type: "success", text: response.data.message });
       setFormData({ oldpassword: "", newpassword: "", confirmpassword: "" });
     } catch (err) {

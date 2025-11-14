@@ -4,11 +4,13 @@ import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import API from "../../../api/api";
 import { Pencil, Trash2, PlusCircle } from "lucide-react";
+import { usePermission } from "../../../hooks/usePermission";
 
 function RoleManager() {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { hasPermission } = usePermission();
 
   const fetchRoles = async () => {
     try {
@@ -51,26 +53,31 @@ function RoleManager() {
       name: "Actions",
       cell: (row) => (
         <div className="d-flex gap-2">
-          <Button
-            variant="outline-primary"
-            size="sm"
-            className="d-flex align-items-center justify-content-center"
-            onClick={() => navigate(`/role/edit/${row.id}`)}
-            title="Edit Role"
-          >
-            <Pencil size={16} />
-          </Button>
-          <Button
-            variant="outline-danger"
-            size="sm"
-            className="d-flex align-items-center justify-content-center"
-            onClick={() => handleDelete(row.id)}
-            title="Delete Role"
-          >
-            <Trash2 size={16} />
-          </Button>
+          {hasPermission('role_permission', 'canModify') && (
+            <Button
+              variant="outline-primary"
+              size="sm"
+              className="d-flex align-items-center justify-content-center"
+              onClick={() => navigate(`/role/edit/${row.id}`)}
+              title="Edit Role"
+            >
+              <Pencil size={16} />
+            </Button>
+          )}
+          {hasPermission('role_permission', 'canDelete') && (
+            <Button
+              variant="outline-danger"
+              size="sm"
+              className="d-flex align-items-center justify-content-center"
+              onClick={() => handleDelete(row.id)}
+              title="Delete Role"
+            >
+              <Trash2 size={16} />
+            </Button>
+          )}
         </div>
       ),
+      omit: !hasPermission('role_permission', 'canModify') && !hasPermission('role_permission', 'canDelete'),
     },
   ];
 
@@ -82,15 +89,17 @@ function RoleManager() {
           <h4 className="mb-0 fw-bold text-primary">Role Manager</h4>
           <small className="text-muted">View and manage all available roles</small>
         </div>
-        <Button
-          variant="primary"
-          className="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-          style={{ width: "45px", height: "45px" }}
-          onClick={() => navigate("/role/add")}
-          title="Add New Role"
-        >
-          <PlusCircle size={22} color="white" />
-        </Button>
+        {hasPermission('role_permission', 'canCreate') && (
+          <Button
+            variant="primary"
+            className="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: "45px", height: "45px" }}
+            onClick={() => navigate("/role/add")}
+            title="Add New Role"
+          >
+            <PlusCircle size={22} color="white" />
+          </Button>
+        )}
       </div>
 
       {/* Table Section */}

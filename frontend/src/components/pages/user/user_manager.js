@@ -25,8 +25,10 @@ import API from "../../../api/api";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 import ViewUserModal from "./viewUserModal";
+import { usePermission } from "../../../hooks/usePermission";
 
 function UserManager() {
+  const { hasPermission } = usePermission();
   // const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
@@ -146,8 +148,8 @@ function UserManager() {
       name: "Status",
       cell: (row) => (
         <div
-          onClick={() => handleToggleStatus(row.id)}
-          style={{ cursor: "pointer" }}
+          onClick={hasPermission('user', 'canModify') ? () => handleToggleStatus(row.id) : undefined}
+          style={{ cursor: hasPermission('user', 'canModify') ? "pointer" : "default" }}
         >
           {row.status ? (
             <span className="badge bg-success d-flex align-items-center gap-1" style={{transition:"none"}}>
@@ -165,30 +167,35 @@ function UserManager() {
       name: "Action",
       cell: (row) => (
         <div className="d-flex gap-3 justify-content-center">
-          <OverlayTrigger placement="top" overlay={<Tooltip>Edit</Tooltip>}>
-            <Button
-              variant="link"
-              className="p-0 text-primary"
-              onClick={() => {
-                setSelectedUserId(row.id);
-                setShowEditModal(true);
-              }}
-            >
-              <Edit2 size={18} />
-            </Button>
-          </OverlayTrigger>
+          {hasPermission('user', 'canModify') && (
+            <OverlayTrigger placement="top" overlay={<Tooltip>Edit</Tooltip>}>
+              <Button
+                variant="link"
+                className="p-0 text-primary"
+                onClick={() => {
+                  setSelectedUserId(row.id);
+                  setShowEditModal(true);
+                }}
+              >
+                <Edit2 size={18} />
+              </Button>
+            </OverlayTrigger>
+          )}
 
-          <OverlayTrigger placement="top" overlay={<Tooltip>Delete</Tooltip>}>
-            <Button
-              variant="link"
-              className="p-0 text-danger"
-              onClick={() => handleDelete(row.id)}
-            >
-              <Trash2 size={18} />
-            </Button>
-          </OverlayTrigger>
+          {hasPermission('user', 'canDelete') && (
+            <OverlayTrigger placement="top" overlay={<Tooltip>Delete</Tooltip>}>
+              <Button
+                variant="link"
+                className="p-0 text-danger"
+                onClick={() => handleDelete(row.id)}
+              >
+                <Trash2 size={18} />
+              </Button>
+            </OverlayTrigger>
+          )}
         </div>
       ),
+      omit: !hasPermission('user', 'canModify') && !hasPermission('user', 'canDelete'),
     },
   ];
 
@@ -205,25 +212,29 @@ function UserManager() {
         </div>
 
         <div className="d-flex align-items-center gap-2">
-          <Button
-            variant={showFilter ? "primary" : "outline-secondary"}
-            className="rounded-circle d-flex align-items-center justify-content-center"
-            style={{ width: "40px", height: "40px" }}
-            onClick={() => setShowFilter(!showFilter)}
-            title="Filter"
-          >
-            <Filter size={18} />
-          </Button>
+          {hasPermission('user', 'canList') && (
+            <Button
+              variant={showFilter ? "primary" : "outline-secondary"}
+              className="rounded-circle d-flex align-items-center justify-content-center"
+              style={{ width: "40px", height: "40px" }}
+              onClick={() => setShowFilter(!showFilter)}
+              title="Filter"
+            >
+              <Filter size={18} />
+            </Button>
+          )}
 
-          <Button
-            variant="primary"
-            className="rounded-circle d-flex align-items-center justify-content-center"
-            style={{ width: "40px", height: "40px" }}
-            onClick={() => setShowModal(true)}
-            title="Add User"
-          >
-            <Plus size={18} />
-          </Button>
+          {hasPermission('user', 'canCreate') && (
+            <Button
+              variant="primary"
+              className="rounded-circle d-flex align-items-center justify-content-center"
+              style={{ width: "40px", height: "40px" }}
+              onClick={() => setShowModal(true)}
+              title="Add User"
+            >
+              <Plus size={18} />
+            </Button>
+          )}
         </div>
       </div>
 

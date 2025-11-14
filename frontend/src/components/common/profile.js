@@ -47,8 +47,6 @@ function Profile() {
     setMessage("");
 
     try {
-      const token = localStorage.getItem("token");
-
       const formDataToSend = new FormData();
       formDataToSend.append("user_name", formData.user_name);
       formDataToSend.append("phone_number", formData.phone_number);
@@ -60,7 +58,6 @@ function Profile() {
 
       const res = await API.put("/sslanalysis/updateprofile", formDataToSend, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
