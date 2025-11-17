@@ -1,5 +1,6 @@
-const Blocked_IP = require('../../model/Blocked_IPModel');
+const Blocked_IP = require('../../model/blockedipModel');
 const { Op } = require("sequelize");
+const { fetchIPInfo } = require('../../utils/ipChecker');
 
 exports.createBlocked_IP = async (req, res) => {
   try {
@@ -16,9 +17,23 @@ exports.createBlocked_IP = async (req, res) => {
       });
     }
 
+    // Optionally fetch IP info from external API
+    let ipInfo = browser_info;
+    if (!ipInfo && ip_address) {
+      const fetchedInfo = await fetchIPInfo(ip_address);
+      if (fetchedInfo) {
+        ipInfo = JSON.stringify({
+          country: fetchedInfo.country,
+          city: fetchedInfo.city,
+          isp: fetchedInfo.isp,
+          org: fetchedInfo.org
+        });
+      }
+    }
+
     const newEntry = await Blocked_IP.create({
       ip_address,
-      browser_info,
+      browser_info: ipInfo,
       blocked_type,
       login_access: false, 
     });

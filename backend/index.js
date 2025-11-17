@@ -9,6 +9,7 @@ require('./model/moduleModel');
 require('./model/permissionModel');
 require('./model/rolePermissionModel');
 require('./model/rolesModel');
+require('./model/blockedipModel');
 
 
 app.use(cors())
@@ -16,7 +17,6 @@ app.use(express.json());
 
 const path = require("path");
 app.use("/uploads", express.static(path.join(__dirname, "middleware/uploads")));
-
 
 const sslRoutes = require('./routes/SSL_AuthRoutes/sslCertiRoutes');
 app.use('/sslanalysis', sslRoutes);
@@ -26,6 +26,9 @@ app.use('/roles', roleRoutes);
 
 const userModuleRoutes = require('./routes/user module/userModuleRoutes');
 app.use('/users', userModuleRoutes);
+
+const blockedIPRoutes = require('./routes/Blocked module/blockedIPRoutes');
+app.use('/blocked-ips', blockedIPRoutes);
 
 
 sequelize.authenticate()

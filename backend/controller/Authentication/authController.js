@@ -4,6 +4,7 @@ const User = require('../../model/userModel');
 const Role = require('../../model/rolesModel');
 const RolePermission = require('../../model/rolePermissionModel');
 const nodemailer = require("nodemailer");
+const { getClientIP, fetchIPInfo, isIPBlocked } = require('../../utils/ipChecker');
 
 // Nodemailer Transporter (using Gmail)
 const transporter = nodemailer.createTransport({
@@ -83,6 +84,21 @@ exports.registration = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // Check if IP is blocked
+    const clientIP = getClientIP(req);
+    console.log("Login attempt from IP:", clientIP);
+    
+    const blocked = await isIPBlocked(clientIP);
+    console.log("Is IP blocked?", blocked);
+    
+    if (blocked) {
+      console.log("Blocking login for IP:", clientIP);
+      return res.status(403).json({ 
+        error: "Access denied. Your IP address has been blocked." 
+      });
+    }
+
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
