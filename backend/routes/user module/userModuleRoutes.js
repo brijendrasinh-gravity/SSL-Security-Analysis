@@ -6,11 +6,13 @@ const validateRequest = require("../../middleware/schemaValidation/validationMid
 const authSchema = require("../../schemas/userModuleSchema");
 const auth = require("../../middleware/authMiddleware");
 const { checkPermission } = require("../../middleware/checkPermissionMiddleware");
+const checkBlockedIP = require('../../middleware/checkBlockedIPMiddleware');
 
 // User Management Routes - Protected with RBAC
 router.post(
   "/create-user",
   auth,
+  checkBlockedIP,
   checkPermission("user", "canCreate"),
   upload.single("profile_image"),
   validateRequest(authSchema.createUserSchema),
@@ -20,6 +22,7 @@ router.post(
 router.get(
   "/get-users",
   auth,
+  checkBlockedIP,
   checkPermission("user", "canList"),
   userController.getAllUsers
 );
@@ -27,6 +30,7 @@ router.get(
 router.get(
   "/get-user/:id",
   auth,
+  checkBlockedIP,
   checkPermission("user", "canList"),
   validateRequest(authSchema.getUserByIdSchema),
   userController.getUserById
@@ -35,6 +39,7 @@ router.get(
 router.put(
   "/update-user/:id",
   auth,
+  checkBlockedIP,
   checkPermission("user", "canModify"),
   upload.single("profile_image"),
   validateRequest(authSchema.updateUserSchema),
@@ -44,6 +49,7 @@ router.put(
 router.delete(
   "/delete-user/:id",
   auth,
+  checkBlockedIP,
   checkPermission("user", "canDelete"),
   validateRequest(authSchema.deleeUserByIdSchema),
   userController.deleteUser
@@ -52,6 +58,7 @@ router.delete(
 router.patch(
   "/toggle-status/:id",
   auth,
+  checkBlockedIP,
   checkPermission("user", "canModify"),
   validateRequest(authSchema.toggleStatusSchema),
   userController.toggleUserStatus

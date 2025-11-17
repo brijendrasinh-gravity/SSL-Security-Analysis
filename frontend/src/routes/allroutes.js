@@ -16,6 +16,7 @@ import User from "../components/pages/user/user_manager";
 import RoleManager from "../components/pages/role permission/role_manager";
 import AddRole from "../components/pages/role permission/add_role";
 import EditRole from "../components/pages/role permission/edit_role";
+import BlockedIPManager from "../components/pages/blocked_ip/BlockedIPManager";
 import Profile from "../components/common/profile";
 import BackButton from "../components/common/backbutton";
 
@@ -107,6 +108,17 @@ function AllRoutes() {
           <ProtectedRoute>
             <PermissionGuard moduleName="role_permission" requiredPermission="canModify">
               <EditRole />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/blocked-ip"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard moduleName="blocked_ip" requiredPermission="canList">
+              <BlockedIPManager />
             </PermissionGuard>
           </ProtectedRoute>
         }

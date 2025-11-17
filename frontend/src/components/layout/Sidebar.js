@@ -1,6 +1,6 @@
 import { Nav, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Shield, User } from 'lucide-react';
+import { Home, Shield, User, ShieldAlert } from 'lucide-react';
 import { usePermission } from '../../hooks/usePermission';
 import sslLogo from '../../assets/images/ssl-logo.png';
 
@@ -27,6 +27,12 @@ function Sidebar({ isCollapsed }) {
       icon: Shield,
       label: 'Role & Permission',
       moduleName: 'role_permission'
+    },
+    {
+      path: '/blocked-ip',
+      icon: ShieldAlert,
+      label: 'Blocked IPs',
+      moduleName: 'blocked_ip'
     },
     {
       path: '/scan',

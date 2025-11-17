@@ -10,7 +10,7 @@ require('./model/permissionModel');
 require('./model/rolePermissionModel');
 require('./model/rolesModel');
 require('./model/blockedipModel');
-
+require('./model/generalSettingModel');
 
 app.use(cors())
 app.use(express.json());
@@ -29,7 +29,6 @@ app.use('/users', userModuleRoutes);
 
 const blockedIPRoutes = require('./routes/Blocked module/blockedIPRoutes');
 app.use('/blocked-ips', blockedIPRoutes);
-
 
 sequelize.authenticate()
   .then(() => {

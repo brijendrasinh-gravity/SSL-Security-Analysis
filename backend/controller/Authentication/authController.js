@@ -85,8 +85,8 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Check if IP is blocked
-    const clientIP = getClientIP(req);
+    // Check if IP is blocked - getClientIP is now async
+    const clientIP = await getClientIP(req);
     console.log("Login attempt from IP:", clientIP);
     
     const blocked = await isIPBlocked(clientIP);

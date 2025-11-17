@@ -55,6 +55,18 @@ function EditRole() {
   // All checkbox logic
   const handlePermissionChange = (moduleIndex, key, value) => {
     const updated = [...roleData.permissions];
+    
+    // Ensure the permission object exists
+    if (!updated[moduleIndex]) {
+      updated[moduleIndex] = {
+        module_name: modules[moduleIndex]?.module_name,
+        canList: false,
+        canCreate: false,
+        canModify: false,
+        canDelete: false,
+      };
+    }
+    
     updated[moduleIndex][key] = value;
 
     if (key === "all") {
@@ -67,8 +79,10 @@ function EditRole() {
     setRoleData({ ...roleData, permissions: updated });
   };
 
-  const isAllChecked = (perm) =>
-    perm.canList && perm.canCreate && perm.canModify && perm.canDelete;
+  const isAllChecked = (perm) => {
+    if (!perm) return false;
+    return perm.canList && perm.canCreate && perm.canModify && perm.canDelete;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -140,10 +154,14 @@ function EditRole() {
               {modules.length > 0 ? (
                 modules.map((mod, index) => {
                   const perm = roleData.permissions[index];
-                  const available =
-                    mod.permissions_list?.map((p) =>
-                      p.name.split("-")[1]
-                    ) || [];
+                  
+                  // Extract available permissions from permissions_list
+                  const available = mod.permissions_list?.map((p) => {
+                    const parts = p.name.split("-");
+                    return parts[parts.length - 1]; // Get last part (list, create, modify, delete)
+                  }) || [];
+
+                  // console.log(`Module: ${mod.module_name}, Available:`, available);
 
                   return (
                     <tr key={index} className="text-center">
@@ -173,7 +191,7 @@ function EditRole() {
                         {available.includes("list") ? (
                           <Form.Check
                             type="checkbox"
-                            checked={perm.canList}
+                            checked={perm?.canList || false}
                             onChange={(e) =>
                               handlePermissionChange(
                                 index,
@@ -191,7 +209,7 @@ function EditRole() {
                         {available.includes("create") ? (
                           <Form.Check
                             type="checkbox"
-                            checked={perm.canCreate}
+                            checked={perm?.canCreate || false}
                             onChange={(e) =>
                               handlePermissionChange(
                                 index,
@@ -209,7 +227,7 @@ function EditRole() {
                         {available.includes("modify") ? (
                           <Form.Check
                             type="checkbox"
-                            checked={perm.canModify}
+                            checked={perm?.canModify || false}
                             onChange={(e) =>
                               handlePermissionChange(
                                 index,
@@ -227,7 +245,7 @@ function EditRole() {
                         {available.includes("delete") ? (
                           <Form.Check
                             type="checkbox"
-                            checked={perm.canDelete}
+                            checked={perm?.canDelete || false}
                             onChange={(e) =>
                               handlePermissionChange(
                                 index,

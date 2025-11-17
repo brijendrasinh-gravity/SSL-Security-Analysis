@@ -3,6 +3,9 @@ import { Dropdown, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { User, LogOut, Settings, Menu } from "lucide-react";
 import { UserContext } from "../../context/usercontext";
+import { useEffect } from "react";
+import axios from "axios";
+// import { detect } from "detect-browser";
 
 function Header({ toggleSidebar }) {
   const navigate = useNavigate();
@@ -15,6 +18,22 @@ function Header({ toggleSidebar }) {
     clearUser();
     navigate("/login");
   };
+  // const browser = detect();
+  // console.log(browser);
+  // const fetchIPInfo = async () => {
+  //   try {
+  //     const response = await axios.get(`https://ipwhois.app/json/`);
+  //     console.log(response.data);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error("Error fetching IP info:", error.message);
+  //     return null;
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchIPInfo();
+  // }, []);
 
   const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : "U");
 

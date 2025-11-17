@@ -8,11 +8,13 @@ const validateRequest = require("../../middleware/schemaValidation/validationMid
 const authSchema = require("../../schemas/sslCertiSchema");
 const upload = require("../../middleware/multer/multerMiddleware");
 const { checkPermission } = require("../../middleware/checkPermissionMiddleware");
+const checkBlockedIP = require('../../middleware/checkBlockedIPMiddleware');
 
 // SSL Analysis and CRUD - Protected with RBAC
 router.post(
   "/security",
   auth,
+  checkBlockedIP,
   checkPermission("ssl_security", "canCreate"),
   sslCertiController.securityAnalysis
 );
@@ -20,6 +22,7 @@ router.post(
 router.get(
   "/getbulkreport",
   auth,
+  checkBlockedIP,
   checkPermission("ssl_security", "canList"),
   sslCrudController.getAllReports
 );
@@ -27,6 +30,7 @@ router.get(
 router.get(
   "/getreportbyid/:id",
   auth,
+  checkBlockedIP,
   checkPermission("ssl_security", "canList"),
   validateRequest(authSchema.getReportByidSchema),
   sslCrudController.getReportByID
@@ -35,6 +39,7 @@ router.get(
 router.delete(
   "/deletereport/:id",
   auth,
+  checkBlockedIP,
   checkPermission("ssl_security", "canDelete"),
   validateRequest(authSchema.deleteReportByid),
   sslCrudController.deleteReport
@@ -52,10 +57,10 @@ router.post(
   validateRequest(authSchema.loginSchema),
   authController.login
 );
-router.post("/changepassword", auth, validateRequest(authSchema.changePasswordSchema) ,authController.changePassword);
+router.post("/changepassword", auth, checkBlockedIP , validateRequest(authSchema.changePasswordSchema) ,authController.changePassword);
 
-router.get("/profile", auth, sslCrudController.getProfile);
-router.put("/updateprofile", auth, validateRequest(authSchema.updateProfileSchema),upload.single("profile_image") ,sslCrudController.updateProfile);
+router.get("/profile", auth, checkBlockedIP, sslCrudController.getProfile);
+router.put("/updateprofile", auth, checkBlockedIP ,validateRequest(authSchema.updateProfileSchema),upload.single("profile_image") ,sslCrudController.updateProfile);
 
 //First Time Users API
 router.post(
