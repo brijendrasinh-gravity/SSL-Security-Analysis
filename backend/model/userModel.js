@@ -30,9 +30,13 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    is_first_time:{
-      type:DataTypes.BOOLEAN,
-      defaultValue:true
+    password_changed_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    is_first_time: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     description: {
       type: DataTypes.TEXT,
@@ -66,6 +70,10 @@ const User = sequelize.define(
     canReset: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    last_password_reminder: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {

@@ -11,7 +11,8 @@ const GeneralSetting = sequelize.define("general_setting",{
         type:DataTypes.STRING
     },
     field_value:{
-        type:DataTypes.STRING
+        type:DataTypes.STRING,
+        allowNull:true
     },
     cb_deleted:{
         type:DataTypes.BOOLEAN,

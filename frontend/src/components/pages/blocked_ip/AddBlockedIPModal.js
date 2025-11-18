@@ -155,7 +155,7 @@ function AddBlockedIPModal({ show, onHide, onIPAdded }) {
                       <>
                         <MapPin size={16} className="me-1" />
                         Use My IP
-                      </>
+                      </
                     )}
                   </Button> */}
                 </div>

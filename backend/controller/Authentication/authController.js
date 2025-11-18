@@ -5,6 +5,12 @@ const Role = require('../../model/rolesModel');
 const RolePermission = require('../../model/rolePermissionModel');
 const nodemailer = require("nodemailer");
 const { getClientIP, fetchIPInfo, isIPBlocked } = require('../../utils/ipChecker');
+const GeneralSetting = require('../../model/generalSettingModel');
+const Blocked_IP = require('../../model/blockedipModel');
+const axios = require('axios');
+
+// In-memory storage for tracking login attempts by IP
+const loginAttempts = new Map();
 
 // Nodemailer Transporter (using Gmail)
 const transporter = nodemailer.createTransport({
@@ -85,15 +91,21 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Check if IP is blocked - getClientIP is now async
-    const clientIP = await getClientIP(req);
+    // Get client IP
+    let clientIP;
+    try {
+      const ipResponse = await axios.get("https://ipwhois.app/json/", { timeout: 3000 });
+      clientIP = ipResponse.data.ip;
+    } catch (error) {
+      clientIP = req.headers["x-forwarded-for"]?.split(",")[0] || req.connection.remoteAddress || "127.0.0.1";
+      if (clientIP.startsWith("::ffff:")) clientIP = clientIP.substring(7);
+    }
+    
     console.log("Login attempt from IP:", clientIP);
     
+    // Check if IP is already blocked
     const blocked = await isIPBlocked(clientIP);
-    console.log("Is IP blocked?", blocked);
-    
     if (blocked) {
-      console.log("Blocking login for IP:", clientIP);
       return res.status(403).json({ 
         error: "Access denied. Your IP address has been blocked." 
       });
@@ -105,7 +117,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-     if (user.is_first_time) {
+    if (user.is_first_time) {
       return res.status(403).json({
         success: false,
         is_first_time: true,
@@ -122,10 +134,118 @@ exports.login = async (req, res) => {
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
+    
     if (!validPassword) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      // Get max login attempts from general_settings table
+      const maxAttemptsSetting = await GeneralSetting.findOne({
+        where: { field_name: "MAX_LOGIN_ATTEMPTS", cb_deleted: false }
+      });
+      const maxAttempts = parseInt(maxAttemptsSetting?.field_value || 5);
+
+      const attemptData = loginAttempts.get(clientIP) || { count: 0, lastAttempt: new Date() };
+      attemptData.count += 1;
+      attemptData.lastAttempt = new Date();
+      attemptData.email = email;
+      loginAttempts.set(clientIP, attemptData);
+
+      if (attemptData.count >= maxAttempts) {
+        const existingBlock = await Blocked_IP.findOne({
+          where: { ip_address: clientIP, cb_deleted: false }
+        });
+
+        if (!existingBlock) {
+          const browser = req.headers['user-agent'] || "Unknown";
+          await Blocked_IP.create({
+            ip_address: clientIP,
+            browser_info: browser,
+            blocked_type: "Login",
+            login_access: false
+          });
+        }
+
+        loginAttempts.delete(clientIP);
+
+        return res.status(403).json({
+          error: `Maximum login attempts (${maxAttempts}) exceeded. Your IP has been blocked.`,
+          blocked: true
+        });
+      }
+
+      const remainingAttempts = maxAttempts - attemptData.count;
+      return res.status(401).json({ 
+        error: `Invalid credentials. ${remainingAttempts} attempt(s) remaining.`,
+        remainingAttempts
+      });
     }
 
+    //Pass Expiry Check
+    const expirySetting = await GeneralSetting.findOne({
+      where: { field_name: "PASSWORD_EXPIRATION_DAYS", cb_deleted: false }
+    });
+
+    if (expirySetting) {
+      const expiryDays = parseInt(expirySetting.field_value || 0);
+
+      if (expiryDays > 0) {
+        const lastChanged = user.password_changed_at;
+
+        if (!lastChanged) {
+          // Never changed – treat as expired
+          return res.status(403).json({
+            password_expired: true,
+            message: "Your password has expired. Please reset your password."
+          });
+        }
+
+        const diffMs = Date.now() - new Date(lastChanged).getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= expiryDays) {
+          return res.status(403).json({
+            password_expired: true,
+            message: "Your password has expired. Please reset your password."
+          });
+        }
+      }
+    }
+
+    // Successful login - reset login attempts for this IP
+    loginAttempts.delete(clientIP);
+
+    // Check password expiration
+    const passwordExpirySetting = await GeneralSetting.findOne({
+      where: { field_name: "PASSWORD_EXPIRY_DAYS", cb_deleted: false }
+    });
+    const expiryDays = parseInt(passwordExpirySetting?.field_value || 90);
+    
+    let passwordStatus = { expired: false, daysRemaining: null, showReminder: false };
+    
+    if (user.password_changed_at) {
+      const passwordAge = Math.floor((new Date() - new Date(user.password_changed_at)) / (1000 * 60 * 60 * 24));
+      const daysRemaining = expiryDays - passwordAge;
+      
+      if (daysRemaining <= 0) {
+        // Password expired - force change
+        return res.status(403).json({
+          error: "Your password has expired. Please change your password.",
+          passwordExpired: true,
+          userId: user.id,
+          email: user.email
+        });
+      } else if (daysRemaining <= 7) {
+        // Check if reminder should be shown (once per day)
+        const today = new Date().toDateString();
+        const lastReminder = user.last_password_reminder ? new Date(user.last_password_reminder).toDateString() : null;
+        
+        if (lastReminder !== today) {
+          passwordStatus.showReminder = true;
+          passwordStatus.daysRemaining = daysRemaining;
+          
+          // Update last reminder date
+          await user.update({ last_password_reminder: new Date() });
+        }
+      }
+    }
 
     // Fetch user's role and permissions
     const role = await Role.findByPk(user.role_id);
@@ -147,6 +267,7 @@ exports.login = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       token,
+      passwordStatus,
       user: {
         id: user.id,
         email: user.email,
@@ -176,36 +297,49 @@ exports.changePassword = async (req, res) => {
     const { oldpassword, newpassword } = req.body;
 
     if (!oldpassword || !newpassword) {
-      return res
-        .status(400)
-        .json("Old password and new password are required!");
+      return res.status(400).json({
+        success: false,
+        message: "Old password and new password are required!"
+      });
     }
 
     const user = await User.findByPk(req.user.user_id);
 
     if (!user) {
-      return res.status(404).json("User not found!");
+      return res.status(404).json({
+        success: false,
+        message: "User not found!"
+      });
     }
 
     const match = await bcrypt.compare(oldpassword, user.password);
 
     if (!match) {
-      return res.status(400).json("Incorrect old password!");
+      return res.status(400).json({
+        success: false,
+        message: "Incorrect old password!"
+      });
     }
 
-    user.password = await bcrypt.hash(newpassword, 10);
-    await user.save();
+    const hashedPassword = await bcrypt.hash(newpassword, 10);
+
+    await user.update({
+      password: hashedPassword,
+      password_changed_at: new Date()
+    });
 
     res.status(200).json({
+      success: true,
       message: "Password changed successfully",
     });
   } catch (error) {
     res.status(500).json({
+      success: false,
+      message: "Error changing password",
       error: error.message,
     });
   }
 };
-
 
 
 //OTP 
@@ -299,13 +433,15 @@ exports.resetForgotPassword = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(newpassword, 10);
-    user.password = hashedPassword;
 
-    // Clear temporary fields
-    user.otp = null;
-    user.otpExpirationTime = null;
-    user.canReset = false; // reset flag
-    await user.save();
+    // Update password + timestamp
+    await user.update({
+      password: hashedPassword,
+      password_changed_at: new Date(),    //for expiration feature
+      otp: null,
+      otpExpirationTime: null,
+      canReset: false
+    });
 
     res.json({ success: true, message: "Password reset successful" });
   } catch (err) {
@@ -389,6 +525,7 @@ exports.setNewPassword = async (req, res) => {
 
     user.password = hashedPassword;
     user.is_first_time = false;
+    user.password_changed_at; new Date();
 
     await user.save();
 

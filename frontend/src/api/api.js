@@ -34,11 +34,20 @@ API.interceptors.response.use(
 
       // Handle different error types
       if (error.response.status === 401) {
-        // Unauthorized - token invalid or expired
-        alert("Session expired. Please login again.");
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        window.location.href = "/login";
+        // Check if it's a login failure (no token in request) or session expiry
+        const isLoginRequest = error.config.url.includes('/login');
+        
+        if (isLoginRequest) {
+          // Login failure - don't redirect, just show the error
+          // The error will be handled by the login component
+          return Promise.reject(error);
+        } else {
+          // Session expired - redirect to login
+          alert("Session expired. Please login again.");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+        }
       } else if (error.response.status === 403) {
         // Check if IP is blocked
         if (error.response.data.blocked === true) {

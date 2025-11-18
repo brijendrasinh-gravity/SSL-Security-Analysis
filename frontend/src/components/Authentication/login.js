@@ -24,7 +24,7 @@ function Login() {
 
     try {
       const response = await API.post("/sslanalysis/login", formData);
-      
+
       // Check if first-time login
       if (response.data?.is_first_time) {
         setMessage({
@@ -42,19 +42,73 @@ function Login() {
         return;
       }
 
+      //Password expired handling
+      if (response.data?.password_expired) {
+        setMessage({
+          type: "danger",
+          text: response.data.message || "Your password has expired.",
+        });
+
+        // Redirect user to change password page
+        setTimeout(() => {
+          navigate("/change-password", {
+            state: { email: formData.email },
+          });
+        }, 1500);
+
+        return; // stop normal login flow
+      }
+
       // Normal login flow
       if (response.data?.token && response.data?.user) {
         localStorage.setItem("token", response.data.token);
         setUser(response.data.user);
+        
+        // Check for password reminder
+        if (response.data.passwordStatus?.showReminder) {
+          const daysRemaining = response.data.passwordStatus.daysRemaining;
+          localStorage.setItem("passwordReminder", JSON.stringify({
+            show: true,
+            daysRemaining: daysRemaining
+          }));
+        }
+        
         setMessage({ type: "success", text: "Login is successful" });
         setTimeout(() => navigate("/"), 1500);
       } else {
         setMessage({ type: "danger", text: "Invalid login response" });
       }
     } catch (err) {
+      const errorData = err.response?.data;
+      let errorMessage = errorData?.error || "Login failed";
+
+      // Blocked IP handling
+      if (errorData?.blocked === true) {
+        errorMessage =
+          errorData.error ||
+          "Your IP has been blocked due to too many failed login attempts.";
+      }
+
+      //Password expired handling (backend may return 403)
+      if (errorData?.password_expired) {
+        setMessage({
+          type: "danger",
+          text: errorData.message || "Your password has expired.",
+        });
+
+        setTimeout(() => {
+          navigate("/change-password", {
+            state: { email: formData.email },
+          });
+        }, 1500);
+
+        setLoading(false);
+        return;
+      }
+
       setMessage({
         type: "danger",
-        text: err.response?.data?.error || "Login failed",
+        text: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -134,7 +188,11 @@ function Login() {
                     >
                       {loading ? (
                         <>
-                          <Spinner animation="border" size="sm" className="me-2" />
+                          <Spinner
+                            animation="border"
+                            size="sm"
+                            className="me-2"
+                          />
                           Signing in...
                         </>
                       ) : (

@@ -11,12 +11,17 @@ require('./model/rolePermissionModel');
 require('./model/rolesModel');
 require('./model/blockedipModel');
 require('./model/generalSettingModel');
+require('./model/virusTotalModel');
 
 app.use(cors())
 app.use(express.json());
 
 const path = require("path");
 app.use("/uploads", express.static(path.join(__dirname, "middleware/uploads")));
+
+//limited IP access module middleware(only allowed ip can visit site)
+const limitedAccessMiddleware = require('./middleware/limitedAccessMiddleware');
+app.use(limitedAccessMiddleware);
 
 const sslRoutes = require('./routes/SSL_AuthRoutes/sslCertiRoutes');
 app.use('/sslanalysis', sslRoutes);
@@ -29,6 +34,12 @@ app.use('/users', userModuleRoutes);
 
 const blockedIPRoutes = require('./routes/Blocked module/blockedIPRoutes');
 app.use('/blocked-ips', blockedIPRoutes);
+
+const generalSettingRoutes = require('./routes/GeneralSetting/generalSettingRoutes');
+app.use('/settings', generalSettingRoutes);
+
+const virusTotalRoutes = require('./routes/Virus Module/virusTotalRoutes');
+app.use('/virus', virusTotalRoutes);
 
 sequelize.authenticate()
   .then(() => {
@@ -43,4 +54,3 @@ const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
 });
-

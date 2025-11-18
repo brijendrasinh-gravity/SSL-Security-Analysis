@@ -18,6 +18,7 @@ import AddRole from "../components/pages/role permission/add_role";
 import EditRole from "../components/pages/role permission/edit_role";
 import BlockedIPManager from "../components/pages/blocked_ip/BlockedIPManager";
 import Profile from "../components/common/profile";
+import Settings from "../components/pages/settings/Settings";
 import BackButton from "../components/common/backbutton";
 
 function AllRoutes() {
@@ -129,6 +130,14 @@ function AllRoutes() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         }
       />

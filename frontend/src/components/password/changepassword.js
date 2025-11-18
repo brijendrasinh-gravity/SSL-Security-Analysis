@@ -37,13 +37,20 @@ function ChangePassword() {
 
     setLoading(true);
     try {
-      const response = await API.post("/sslanalysis/changepassword", formData);
+      // Only send oldpassword and newpassword to backend
+      const payload = {
+        oldpassword: formData.oldpassword,
+        newpassword: formData.newpassword
+      };
+      
+      const response = await API.post("/sslanalysis/changepassword", payload);
       setMessage({ type: "success", text: response.data.message });
       setFormData({ oldpassword: "", newpassword: "", confirmpassword: "" });
     } catch (err) {
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || "Failed to change password.";
       setMessage({
         type: "danger",
-        text: err.response?.data || "Failed to change password.",
+        text: errorMessage,
       });
     } finally {
       setLoading(false);

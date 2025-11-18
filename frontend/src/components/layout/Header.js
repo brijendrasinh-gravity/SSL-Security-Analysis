@@ -110,7 +110,7 @@ function Header({ toggleSidebar }) {
                 </Dropdown.Item>
 
                 <Dropdown.Item
-                  onClick={() => navigate("/change-password")}
+                  onClick={() => navigate("/settings")}
                   className="d-flex align-items-center py-2"
                 >
                   <Settings size={16} className="me-3 text-muted" />

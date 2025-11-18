@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import PasswordReminderModal from '../common/PasswordReminderModal';
 
 function Layout({ children }) {
   const token = localStorage.getItem('token');
@@ -23,6 +24,7 @@ function Layout({ children }) {
 
   return (
     <div className="min-vh-100 bg-light">
+      <PasswordReminderModal />
       <Sidebar isCollapsed={isCollapsed} />
       <div 
         style={{ 
