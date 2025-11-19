@@ -48,4 +48,11 @@ router.delete(
   VirusTotalController.deleteScan
 );
 
+router.get(
+  "/rescan/:id",
+  auth,
+  checkPermission("virus_total", "canModify"),
+  VirusTotalController.reScan
+);
+
 module.exports = router;

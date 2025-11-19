@@ -1,7 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Card, Spinner, Alert, Row, Col, Badge, Table, Nav, Tab } from "react-bootstrap";
+import {
+  Card,
+  Spinner,
+  Alert,
+  Row,
+  Col,
+  Badge,
+  Table,
+  Nav,
+  Tab,
+} from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
-import { AlertTriangle, CheckCircle, XCircle, Clock, ArrowLeft, RefreshCw, Shield } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Clock,
+  ArrowLeft,
+  RefreshCw,
+  Shield,
+} from "lucide-react";
 import API from "../../../api/api";
 import { toast } from "react-toastify";
 
@@ -35,6 +53,21 @@ function VirusTotalReport() {
     }
   };
 
+  const handleRescan = async () => {
+    try {
+      setRefreshing(true);
+      const res = await API.get(`/virus/rescan/${id}`);
+      if (res.data.success) {
+        toast.success("URL rescanned successfully!");
+        setReport(res.data.data); // Update UI with fresh data
+      }
+    } catch (error) {
+      toast.error("Failed to rescan URL");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const getStats = () => {
     const stats = report?.attributes?.last_analysis_stats || {};
     return {
@@ -48,8 +81,10 @@ function VirusTotalReport() {
 
   const getThreatLevel = () => {
     const stats = getStats();
-    if (stats.malicious > 0) return { level: "danger", text: "Malicious", icon: XCircle };
-    if (stats.suspicious > 0) return { level: "warning", text: "Suspicious", icon: AlertTriangle };
+    if (stats.malicious > 0)
+      return { level: "danger", text: "Malicious", icon: XCircle };
+    if (stats.suspicious > 0)
+      return { level: "warning", text: "Suspicious", icon: AlertTriangle };
     return { level: "success", text: "Clean", icon: CheckCircle };
   };
 
@@ -94,34 +129,48 @@ function VirusTotalReport() {
   const stats = getStats();
   const threat = getThreatLevel();
   const ThreatIcon = threat.icon;
-  const total = stats.malicious + stats.suspicious + stats.undetected + stats.harmless;
+  const total =
+    stats.malicious + stats.suspicious + stats.undetected + stats.harmless;
   const url = report?.attributes?.url || "N/A";
 
   return (
     <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div className="d-flex align-items-center gap-3">
+      <div className="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded shadow-sm">
+        <div>
+          <h4 className="fw-bold mb-0 text-primary">VirusTotal Scan Report</h4>
+          <small
+            className="text-muted text-truncate d-block"
+            style={{ maxWidth: "600px" }}
+          >
+            {url}
+          </small>
+        </div>
+        <div className="d-flex gap-2">
           <button
-            className="btn btn-outline-secondary"
+            className="btn btn-outline-primary"
+            onClick={() => fetchReport(true)}
+            disabled={refreshing}
+          >
+            <RefreshCw size={18} className={refreshing ? "spin" : ""} />
+            {refreshing ? " Refreshing..." : " Refresh"}
+          </button>
+          <button
+            className="btn btn-warning ms-2"
+            onClick={handleRescan}
+            disabled={refreshing}
+          >
+            <RefreshCw size={18} className={refreshing ? "spin" : ""} />
+            Re-Scan
+          </button>
+          <button
+            className="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
+            style={{ width: "40px", height: "40px" }}
             onClick={() => navigate("/virus-total")}
+            title="Back"
           >
             <ArrowLeft size={18} />
           </button>
-          <div>
-            <h4 className="fw-bold mb-0">VirusTotal Scan Report</h4>
-            <small className="text-muted text-truncate d-block" style={{ maxWidth: "600px" }}>
-              {url}
-            </small>
-          </div>
         </div>
-        <button
-          className="btn btn-outline-primary"
-          onClick={() => fetchReport(true)}
-          disabled={refreshing}
-        >
-          <RefreshCw size={18} className={refreshing ? "spin" : ""} />
-          {refreshing ? " Refreshing..." : " Refresh"}
-        </button>
       </div>
 
       <Row className="mb-4">
@@ -130,13 +179,18 @@ function VirusTotalReport() {
             <Card.Body className="p-4">
               <div className="d-flex align-items-center justify-content-between">
                 <div className="d-flex align-items-center gap-3">
-                  <div className={`bg-${threat.level} bg-opacity-10 rounded-circle p-3`}>
+                  <div
+                    className={`bg-${threat.level} bg-opacity-10 rounded-circle p-3`}
+                  >
                     <ThreatIcon size={40} className={`text-${threat.level}`} />
                   </div>
                   <div>
-                    <h3 className={`fw-bold mb-1 text-${threat.level}`}>{threat.text}</h3>
+                    <h3 className={`fw-bold mb-1 text-${threat.level}`}>
+                      {threat.text}
+                    </h3>
                     <p className="mb-0 text-muted">
-                      {stats.malicious} malicious, {stats.suspicious} suspicious out of {total} engines
+                      {stats.malicious} malicious, {stats.suspicious} suspicious
+                      out of {total} engines
                     </p>
                   </div>
                 </div>
@@ -145,12 +199,16 @@ function VirusTotalReport() {
                     <Clock size={16} />
                     <small>
                       {report?.attributes?.last_analysis_date
-                        ? new Date(report.attributes.last_analysis_date * 1000).toLocaleString()
+                        ? new Date(
+                            report.attributes.last_analysis_date * 1000
+                          ).toLocaleString()
                         : "N/A"}
                     </small>
                   </div>
                   <Badge bg={threat.level} className="px-3 py-2">
-                    {stats.malicious > 0 ? `${stats.malicious} Threats Detected` : "No Threats"}
+                    {stats.malicious > 0
+                      ? `${stats.malicious} Threats Detected`
+                      : "No Threats"}
                   </Badge>
                 </div>
               </div>
@@ -159,36 +217,48 @@ function VirusTotalReport() {
         </Col>
       </Row>
 
-      <Row className="mb-4">
+      <Row className="mb-4 g-3">
         <Col md={3}>
-          <Card className="border-0 shadow-sm h-100" style={{ borderLeft: "4px solid #dc3545" }}>
-            <Card.Body className="text-center">
-              <h1 className="display-4 text-danger mb-0">{stats.malicious}</h1>
-              <p className="text-muted mb-0">Malicious</p>
+          <Card className="border-0 shadow-sm h-100 bg-danger bg-opacity-10">
+            <Card.Body className="text-center p-4">
+              <XCircle size={32} className="text-danger mb-2" />
+              <h2 className="display-5 text-danger mb-1 fw-bold">
+                {stats.malicious}
+              </h2>
+              <p className="text-muted mb-0 small">Malicious</p>
             </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="border-0 shadow-sm h-100" style={{ borderLeft: "4px solid #ffc107" }}>
-            <Card.Body className="text-center">
-              <h1 className="display-4 text-warning mb-0">{stats.suspicious}</h1>
-              <p className="text-muted mb-0">Suspicious</p>
+          <Card className="border-0 shadow-sm h-100 bg-warning bg-opacity-10">
+            <Card.Body className="text-center p-4">
+              <AlertTriangle size={32} className="text-warning mb-2" />
+              <h2 className="display-5 text-warning mb-1 fw-bold">
+                {stats.suspicious}
+              </h2>
+              <p className="text-muted mb-0 small">Suspicious</p>
             </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="border-0 shadow-sm h-100" style={{ borderLeft: "4px solid #28a745" }}>
-            <Card.Body className="text-center">
-              <h1 className="display-4 text-success mb-0">{stats.harmless}</h1>
-              <p className="text-muted mb-0">Harmless</p>
+          <Card className="border-0 shadow-sm h-100 bg-success bg-opacity-10">
+            <Card.Body className="text-center p-4">
+              <CheckCircle size={32} className="text-success mb-2" />
+              <h2 className="display-5 text-success mb-1 fw-bold">
+                {stats.harmless}
+              </h2>
+              <p className="text-muted mb-0 small">Harmless</p>
             </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="border-0 shadow-sm h-100" style={{ borderLeft: "4px solid #6c757d" }}>
-            <Card.Body className="text-center">
-              <h1 className="display-4 text-secondary mb-0">{stats.undetected}</h1>
-              <p className="text-muted mb-0">Undetected</p>
+          <Card className="border-0 shadow-sm h-100 bg-secondary bg-opacity-10">
+            <Card.Body className="text-center p-4">
+              <Shield size={32} className="text-secondary mb-2" />
+              <h2 className="display-5 text-secondary mb-1 fw-bold">
+                {stats.undetected}
+              </h2>
+              <p className="text-muted mb-0 small">Undetected</p>
             </Card.Body>
           </Card>
         </Col>
@@ -196,7 +266,10 @@ function VirusTotalReport() {
 
       <Card className="shadow-sm border-0">
         <Card.Body className="p-0">
-          <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
+          <Tab.Container
+            activeKey={activeTab}
+            onSelect={(k) => setActiveTab(k)}
+          >
             <Nav variant="tabs" className="px-3 pt-3">
               <Nav.Item>
                 <Nav.Link eventKey="detection">
@@ -215,37 +288,72 @@ function VirusTotalReport() {
             <Tab.Content>
               <Tab.Pane eventKey="detection">
                 <div className="p-4">
-                  <h5 className="fw-bold mb-3">Security Vendors Analysis</h5>
-                  <Row>
-                    {getEngineResults().map((item, index) => (
-                      <Col md={4} key={index} className="mb-3">
-                        <Card className="border-0 bg-light h-100">
-                          <Card.Body className="d-flex justify-content-between align-items-center">
-                            <div className="d-flex align-items-center gap-2">
-                              <Shield size={16} className="text-muted" />
-                              <span className="fw-semibold">{item.engine}</span>
-                            </div>
-                            <div>
-                              {item.category === "malicious" && (
-                                <Badge bg="danger">Malicious</Badge>
-                              )}
-                              {item.category === "suspicious" && (
-                                <Badge bg="warning">Suspicious</Badge>
-                              )}
-                              {item.category === "undetected" && (
-                                <Badge bg="secondary">Unrated</Badge>
-                              )}
-                              {item.category === "harmless" && (
-                                <Badge bg="success">Clean</Badge>
-                              )}
-                              {item.category === "timeout" && (
-                                <Badge bg="info">Timeout</Badge>
-                              )}
-                            </div>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
+                  <div className="d-flex align-items-center gap-2 mb-4">
+                    <Shield size={20} className="text-primary" />
+                    <h5 className="fw-bold mb-0">Security Vendors Analysis</h5>
+                    <Badge bg="secondary" className="ms-2">
+                      {getEngineResults().length} Engines
+                    </Badge>
+                  </div>
+                  <Row className="g-3">
+                    {getEngineResults().map((item, index) => {
+                      const getBadgeColor = (category) => {
+                        switch (category) {
+                          case "malicious":
+                            return "danger";
+                          case "suspicious":
+                            return "warning";
+                          case "harmless":
+                            return "success";
+                          case "timeout":
+                            return "info";
+                          default:
+                            return "secondary";
+                        }
+                      };
+
+                      const getIcon = (category) => {
+                        switch (category) {
+                          case "malicious":
+                            return <XCircle size={14} />;
+                          case "suspicious":
+                            return <AlertTriangle size={14} />;
+                          case "harmless":
+                            return <CheckCircle size={14} />;
+                          default:
+                            return <Shield size={14} />;
+                        }
+                      };
+
+                      return (
+                        <Col md={4} lg={3} key={index}>
+                          <Card className="border-0 shadow-sm h-100 hover-shadow">
+                            <Card.Body className="p-3">
+                              <div className="d-flex justify-content-between align-items-start mb-2">
+                                <div className="d-flex align-items-center gap-2">
+                                  <Shield size={14} className="text-muted" />
+                                  <span className="fw-semibold small">
+                                    {item.engine}
+                                  </span>
+                                </div>
+                              </div>
+                              <Badge
+                                bg={getBadgeColor(item.category)}
+                                className="d-flex align-items-center gap-1 w-100 justify-content-center py-2"
+                              >
+                                {getIcon(item.category)}
+                                <span className="small">
+                                  {item.category === "undetected"
+                                    ? "Unrated"
+                                    : item.category.charAt(0).toUpperCase() +
+                                      item.category.slice(1)}
+                                </span>
+                              </Badge>
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                      );
+                    })}
                   </Row>
                 </div>
               </Tab.Pane>
@@ -260,16 +368,22 @@ function VirusTotalReport() {
                           {getCategories().length > 0 ? (
                             <Table borderless className="mb-0">
                               <tbody>
-                                {getCategories().map(([vendor, category], index) => (
-                                  <tr key={index}>
-                                    <td className="fw-semibold">{vendor}</td>
-                                    <td className="text-end text-muted">{category}</td>
-                                  </tr>
-                                ))}
+                                {getCategories().map(
+                                  ([vendor, category], index) => (
+                                    <tr key={index}>
+                                      <td className="fw-semibold">{vendor}</td>
+                                      <td className="text-end text-muted">
+                                        {category}
+                                      </td>
+                                    </tr>
+                                  )
+                                )}
                               </tbody>
                             </Table>
                           ) : (
-                            <p className="text-muted mb-0">No categories available</p>
+                            <p className="text-muted mb-0">
+                              No categories available
+                            </p>
                           )}
                         </Card.Body>
                       </Card>
@@ -282,10 +396,15 @@ function VirusTotalReport() {
                           <Table borderless className="mb-0">
                             <tbody>
                               <tr>
-                                <td className="fw-semibold">First Submission</td>
+                                <td className="fw-semibold">
+                                  First Submission
+                                </td>
                                 <td className="text-end text-muted">
                                   {report?.attributes?.first_submission_date
-                                    ? new Date(report.attributes.first_submission_date * 1000).toLocaleString()
+                                    ? new Date(
+                                        report.attributes
+                                          .first_submission_date * 1000
+                                      ).toLocaleString()
                                     : "N/A"}
                                 </td>
                               </tr>
@@ -293,7 +412,10 @@ function VirusTotalReport() {
                                 <td className="fw-semibold">Last Submission</td>
                                 <td className="text-end text-muted">
                                   {report?.attributes?.last_submission_date
-                                    ? new Date(report.attributes.last_submission_date * 1000).toLocaleString()
+                                    ? new Date(
+                                        report.attributes.last_submission_date *
+                                          1000
+                                      ).toLocaleString()
                                     : "N/A"}
                                 </td>
                               </tr>
@@ -301,7 +423,10 @@ function VirusTotalReport() {
                                 <td className="fw-semibold">Last Analysis</td>
                                 <td className="text-end text-muted">
                                   {report?.attributes?.last_analysis_date
-                                    ? new Date(report.attributes.last_analysis_date * 1000).toLocaleString()
+                                    ? new Date(
+                                        report.attributes.last_analysis_date *
+                                          1000
+                                      ).toLocaleString()
                                     : "N/A"}
                                 </td>
                               </tr>
@@ -332,13 +457,15 @@ function VirusTotalReport() {
                               <tr>
                                 <td className="fw-semibold">Status Code</td>
                                 <td className="text-end text-muted">
-                                  {report?.attributes?.last_http_response_code || "N/A"}
+                                  {report?.attributes
+                                    ?.last_http_response_code || "N/A"}
                                 </td>
                               </tr>
                               <tr>
                                 <td className="fw-semibold">Content Length</td>
                                 <td className="text-end text-muted">
-                                  {report?.attributes?.last_http_response_content_length
+                                  {report?.attributes
+                                    ?.last_http_response_content_length
                                     ? `${report.attributes.last_http_response_content_length} bytes`
                                     : "N/A"}
                                 </td>
