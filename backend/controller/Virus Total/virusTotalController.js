@@ -120,7 +120,7 @@ exports.getHistory = async (req, res) => {
   try {
     const scans = await Virus.findAll({
       where: { cb_deleted: false },
-      order: [["created_at", "DESC"]],
+      order: [["createdAt", "DESC"]],
     });
 
     return res.status(200).json({
