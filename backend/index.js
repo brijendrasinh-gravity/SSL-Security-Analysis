@@ -12,6 +12,7 @@ require('./model/rolesModel');
 require('./model/blockedipModel');
 require('./model/generalSettingModel');
 require('./model/virusTotalModel');
+require('./model/virusTotalModel');
 
 app.use(cors())
 app.use(express.json());
@@ -44,7 +45,7 @@ app.use('/virus', virusTotalRoutes);
 sequelize.authenticate()
   .then(() => {
     console.log('Database connected');
-    // return sequelize.sync(); 
+    return sequelize.sync();
   })  
   .catch(err => console.error('Database connection error:', err));
 

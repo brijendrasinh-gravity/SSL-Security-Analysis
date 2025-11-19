@@ -15,7 +15,7 @@ router.post(
 
 // Fetch report by analysis_id
 router.get(
-  "/report/:analysis_id",
+  "/report/:id",
   auth,
   checkPermission("virus_total", "canList"),
   VirusTotalController.getReport

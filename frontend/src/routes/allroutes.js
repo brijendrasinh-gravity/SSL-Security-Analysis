@@ -17,6 +17,8 @@ import RoleManager from "../components/pages/role permission/role_manager";
 import AddRole from "../components/pages/role permission/add_role";
 import EditRole from "../components/pages/role permission/edit_role";
 import BlockedIPManager from "../components/pages/blocked_ip/BlockedIPManager";
+import VirusTotalScanner from "../components/pages/virus_total/VirusTotalScanner";
+import VirusTotalReport from "../components/pages/virus_total/VirusTotalReport";
 import Profile from "../components/common/profile";
 import Settings from "../components/pages/settings/Settings";
 import BackButton from "../components/common/backbutton";
@@ -120,6 +122,28 @@ function AllRoutes() {
           <ProtectedRoute>
             <PermissionGuard moduleName="blocked_ip" requiredPermission="canList">
               <BlockedIPManager />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/virus-total"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard moduleName="virus_total" requiredPermission="canList">
+              <VirusTotalScanner />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/virus-total/report/:id"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard moduleName="virus_total" requiredPermission="canList">
+              <VirusTotalReport />
             </PermissionGuard>
           </ProtectedRoute>
         }

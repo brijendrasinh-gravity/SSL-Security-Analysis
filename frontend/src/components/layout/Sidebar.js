@@ -1,6 +1,6 @@
 import { Nav, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Shield, User, ShieldAlert } from 'lucide-react';
+import { Home, Shield, User, ShieldAlert, Bug } from 'lucide-react';
 import { usePermission } from '../../hooks/usePermission';
 import sslLogo from '../../assets/images/ssl-logo.png';
 
@@ -33,6 +33,12 @@ function Sidebar({ isCollapsed }) {
       icon: ShieldAlert,
       label: 'Blocked IPs',
       moduleName: 'blocked_ip'
+    },
+    {
+      path: '/virus-total',
+      icon: Bug,
+      label: 'Virus Scanner',
+      moduleName: 'virus_total'
     },
     {
       path: '/scan',
