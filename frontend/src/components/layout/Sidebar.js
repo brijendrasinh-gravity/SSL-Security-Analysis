@@ -53,11 +53,13 @@ function Sidebar({ isCollapsed }) {
 
   return (
     <div 
-      className="bg-white border-end vh-100 position-fixed"
+      className="border-end vh-100 position-fixed"
       style={{ 
         width: isCollapsed ? '70px' : '250px', 
         zIndex: 1000,
-        transition: 'width 0.3s ease'
+        transition: 'width 0.3s ease',
+        backgroundColor: '#1d2538',
+        borderColor: '#2a3447'
       }}
     >
       <div 
@@ -73,8 +75,8 @@ function Sidebar({ isCollapsed }) {
               className="me-2"
             />
             <div>
-              <h6 className="mb-0 fw-bold" style={{ fontSize: '14px' }}>SSL Security</h6>
-              <small className="text-muted" style={{ fontSize: '11px' }}>Analysis Tool</small>
+              <h6 className="mb-0 fw-bold text-white" style={{ fontSize: '14px' }}>SSL Security</h6>
+              <small className="text-white-50" style={{ fontSize: '11px' }}>Analysis Tool</small>
             </div>
           </div>
         ) : (
@@ -96,13 +98,12 @@ function Sidebar({ isCollapsed }) {
           const navLink = (
             <NavLink
               to={item.path}
-              className={`nav-link d-flex align-items-center px-3 py-2 rounded text-decoration-none mb-1 ${
-                isActive 
-                  ? 'bg-primary text-white' 
-                  : 'text-dark'
-              }`}
+              className="nav-link d-flex align-items-center px-3 py-2 rounded text-decoration-none mb-1"
               style={{
-                justifyContent: isCollapsed ? 'center' : 'flex-start'
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
+                backgroundColor: isActive ? '#0d6efd' : 'transparent',
+                color: isActive ? '#ffffff' : '#b8bcc8',
+                transition: 'all 0.2s ease'
               }}
             >
               <Icon size={20} />

@@ -30,10 +30,20 @@ function RoleManager() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this role?")) {
       try {
-        await API.delete(`/roles/delete-role/${id}`);
-        fetchRoles(); //This is to Refresh list after every delete 
+        const res = await API.delete(`/roles/delete-role/${id}`);
+
+        // Success response
+        alert(res.data.message || "Role deleted successfully");
+        fetchRoles();
       } catch (error) {
         console.error("Error deleting role:", error);
+
+        // Backend validation error (role assigned to user)
+        if (error.response && error.response.status === 400) {
+          alert(error.response.data.message);
+        } else {
+          alert("Something went wrong while deleting the role.");
+        }
       }
     }
   };
@@ -53,7 +63,7 @@ function RoleManager() {
       name: "Actions",
       cell: (row) => (
         <div className="d-flex gap-2">
-          {hasPermission('role_permission', 'canModify') && (
+          {hasPermission("role_permission", "canModify") && (
             <Button
               variant="outline-primary"
               size="sm"
@@ -64,7 +74,7 @@ function RoleManager() {
               <Pencil size={16} />
             </Button>
           )}
-          {hasPermission('role_permission', 'canDelete') && (
+          {hasPermission("role_permission", "canDelete") && (
             <Button
               variant="outline-danger"
               size="sm"
@@ -77,7 +87,9 @@ function RoleManager() {
           )}
         </div>
       ),
-      omit: !hasPermission('role_permission', 'canModify') && !hasPermission('role_permission', 'canDelete'),
+      omit:
+        !hasPermission("role_permission", "canModify") &&
+        !hasPermission("role_permission", "canDelete"),
     },
   ];
 
@@ -87,9 +99,11 @@ function RoleManager() {
       <div className="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded shadow-sm">
         <div>
           <h4 className="mb-0 fw-bold text-primary">Role Manager</h4>
-          <small className="text-muted">View and manage all available roles</small>
+          <small className="text-muted">
+            View and manage all available roles
+          </small>
         </div>
-        {hasPermission('role_permission', 'canCreate') && (
+        {hasPermission("role_permission", "canCreate") && (
           <Button
             variant="primary"
             className="rounded-circle d-flex align-items-center justify-content-center shadow-sm"

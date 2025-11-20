@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Card, Form, Button, Spinner, Alert, Row, Col, Badge, Table } from "react-bootstrap";
-import { Shield, Search, Clock, Trash2, Eye, AlertTriangle, CheckCircle } from "lucide-react";
+import {
+  Card,
+  Form,
+  Button,
+  Spinner,
+  Row,
+  Col,
+  Badge,
+  Collapse,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
+import DataTable from "react-data-table-component";
+import { Shield, Search, Clock, Trash2, Eye, Filter, Plus } from "lucide-react";
 import API from "../../../api/api";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -11,22 +23,32 @@ function VirusTotalScanner() {
   const [scanning, setScanning] = useState(false);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({ url: "", status: "" });
+  const [showFilter, setShowFilter] = useState(false);
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
   const navigate = useNavigate();
   const { hasPermission } = usePermission();
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [page, perPage]);
 
-  const fetchHistory = async () => {
+  const fetchHistory = async (pageNumber = page, pageLimit = perPage) => {
     setLoading(true);
     try {
-      const res = await API.get("/virus/history");
+      const { url, status } = filters;
+      const res = await API.get("/virus/history", {
+        params: { page: pageNumber, limit: pageLimit, url, status },
+      });
       if (res.data.success) {
-        setHistory(res.data.data);
+        setHistory(res.data.data.rows || res.data.data);
+        setTotalRows(res.data.data.count || res.data.data.length);
       }
     } catch (error) {
       console.error("Error fetching history:", error);
+      toast.error("Failed to fetch scan history");
     } finally {
       setLoading(false);
     }
@@ -55,7 +77,7 @@ function VirusTotalScanner() {
     }
   };
 
-  const handleViewReport = ( scanId) => {
+  const handleViewReport = (scanId) => {
     navigate(`/virus-total/report/${scanId}`);
   };
 
@@ -72,17 +94,96 @@ function VirusTotalScanner() {
     }
   };
 
-  const getStatusBadge = (scan) => {
-    if (!scan.last_analysis_date) {
-      return <Badge bg="warning">Pending</Badge>;
-    }
-    return <Badge bg="success">Completed</Badge>;
-  };
+  const columns = [
+    {
+      name: "URL",
+      selector: (row) => row.scanned_url || "-",
+      sortable: true,
+      cell: (row) => (
+        <span
+          className="text-primary fw-semibold text-truncate"
+          style={{ cursor: "pointer", maxWidth: "400px" }}
+          onClick={() => handleViewReport(row.id)}
+          title={row.scanned_url}
+        >
+          {row.scanned_url}
+        </span>
+      ),
+      grow: 2,
+    },
+    {
+      name: "Status",
+      selector: (row) => row.last_analysis_date,
+      sortable: true,
+      cell: (row) =>
+        row.last_analysis_date ? (
+          <Badge bg="success">Completed</Badge>
+        ) : (
+          <Badge bg="warning">Pending</Badge>
+        ),
+    },
+    {
+      name: "Scanned Date",
+      selector: (row) => row.createdAt,
+      sortable: true,
+      cell: (row) => (
+        <div className="d-flex align-items-center gap-2 text-muted">
+          <Clock size={14} />
+          <small>{new Date(row.createdAt).toLocaleString()}</small>
+        </div>
+      ),
+    },
+    {
+      name: "Analysis Date",
+      selector: (row) => row.last_analysis_date,
+      sortable: true,
+      cell: (row) =>
+        row.last_analysis_date ? (
+          <small className="text-muted">
+            {new Date(row.last_analysis_date).toLocaleString()}
+          </small>
+        ) : (
+          <span className="text-muted">-</span>
+        ),
+    },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-3 justify-content-center">
+          {hasPermission("virus_total", "canList") && (
+            <OverlayTrigger placement="top" overlay={<Tooltip>View Report</Tooltip>}>
+              <Button
+                variant="link"
+                className="p-0 text-primary"
+                onClick={() => handleViewReport(row.id)}
+              >
+                <Eye size={18} />
+              </Button>
+            </OverlayTrigger>
+          )}
+          {hasPermission("virus_total", "canDelete") && (
+            <OverlayTrigger placement="top" overlay={<Tooltip>Delete</Tooltip>}>
+              <Button
+                variant="link"
+                className="p-0 text-danger"
+                onClick={() => handleDelete(row.id)}
+              >
+                <Trash2 size={18} />
+              </Button>
+            </OverlayTrigger>
+          )}
+        </div>
+      ),
+      omit:
+        !hasPermission("virus_total", "canList") &&
+        !hasPermission("virus_total", "canDelete"),
+    },
+  ];
 
   return (
     <div className="container mt-4">
       <ToastContainer />
-      
+
       <div className="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded shadow-sm">
         <div className="d-flex align-items-center gap-2">
           <Shield size={32} className="text-primary" />
@@ -90,6 +191,20 @@ function VirusTotalScanner() {
             <h4 className="fw-bold mb-0 text-primary">VirusTotal URL Scanner</h4>
             <small className="text-muted">Scan URLs for malware and security threats</small>
           </div>
+        </div>
+
+        <div className="d-flex align-items-center gap-2">
+          {hasPermission("virus_total", "canList") && (
+            <Button
+              variant={showFilter ? "primary" : "outline-secondary"}
+              className="rounded-circle d-flex align-items-center justify-content-center"
+              style={{ width: "40px", height: "40px" }}
+              onClick={() => setShowFilter(!showFilter)}
+              title="Filter"
+            >
+              <Filter size={18} />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -120,12 +235,7 @@ function VirusTotalScanner() {
                 </Col>
                 <Col md={2}>
                   <div className="d-grid">
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      size="lg"
-                      disabled={scanning}
-                    >
+                    <Button type="submit" variant="primary" size="lg" disabled={scanning}>
                       {scanning ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -146,6 +256,74 @@ function VirusTotalScanner() {
         </Card>
       )}
 
+      <Collapse in={showFilter}>
+        <div>
+          <Card className="p-3 mb-3 shadow-sm border-0 bg-light">
+            <Form>
+              <Row className="g-3">
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label>Search by URL</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter URL"
+                      value={filters.url}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          url: e.target.value,
+                        }))
+                      }
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label>Filter by Status</Form.Label>
+                    <Form.Select
+                      value={filters.status}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          status: e.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">All</option>
+                      <option value="completed">Completed</option>
+                      <option value="pending">Pending</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <div className="d-flex justify-content-end mt-3">
+                <Button
+                  variant="secondary"
+                  className="me-2"
+                  onClick={() => {
+                    setFilters({ url: "", status: "" });
+                    fetchHistory(1, perPage);
+                  }}
+                >
+                  Reset
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setPage(1);
+                    fetchHistory(1, perPage);
+                  }}
+                >
+                  Apply Filters
+                </Button>
+              </div>
+            </Form>
+          </Card>
+        </div>
+      </Collapse>
+
       <Card className="shadow-sm border-0">
         <Card.Header className="bg-white border-bottom p-3">
           <div className="d-flex align-items-center gap-2">
@@ -154,83 +332,35 @@ function VirusTotalScanner() {
           </div>
         </Card.Header>
         <Card.Body className="p-0">
-          {loading ? (
-            <div className="text-center p-5">
-              <Spinner animation="border" variant="primary" />
-              <p className="mt-3 text-muted">Loading history...</p>
-            </div>
-          ) : history.length === 0 ? (
-            <div className="text-center p-5">
-              <div className="bg-light rounded-circle d-inline-flex p-4 mb-3">
-                <AlertTriangle size={48} className="text-muted" />
+          <DataTable
+            columns={columns}
+            data={history}
+            progressPending={loading}
+            progressComponent={
+              <div className="text-center p-4">
+                <Spinner animation="border" variant="primary" />
               </div>
-              <p className="text-muted mb-0">No scans found. Start by scanning a URL above.</p>
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <Table hover className="mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th className="fw-semibold">URL</th>
-                    <th className="fw-semibold">Status</th>
-                    <th className="fw-semibold">Scanned Date</th>
-                    <th className="fw-semibold">Analysis Date</th>
-                    <th className="text-center fw-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((scan) => (
-                    <tr key={scan.id}>
-                      <td>
-                        <div className="text-truncate fw-medium" style={{ maxWidth: "400px" }}>
-                          {scan.scanned_url}
-                        </div>
-                      </td>
-                      <td>{getStatusBadge(scan)}</td>
-                      <td>
-                        <div className="d-flex align-items-center gap-2 text-muted">
-                          <Clock size={14} />
-                          <small>{new Date(scan.createdAt).toLocaleString()}</small>
-                        </div>
-                      </td>
-                      <td>
-                        {scan.last_analysis_date ? (
-                          <small className="text-muted">
-                            {new Date(scan.last_analysis_date).toLocaleString()}
-                          </small>
-                        ) : (
-                          <span className="text-muted">-</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="d-flex gap-2 justify-content-center">
-                          {hasPermission("virus_total", "canList") && (
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              onClick={() => handleViewReport(scan.id)}
-                            >
-                              <Eye size={14} className="me-1" />
-                              View
-                            </Button>
-                          )}
-                          {hasPermission("virus_total", "canDelete") && (
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={() => handleDelete(scan.id)}
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          )}
+            }
+            pagination
+            paginationServer
+            paginationTotalRows={totalRows}
+            paginationDefaultPage={page}
+            onChangePage={(page) => setPage(page)}
+            onChangeRowsPerPage={(newPerPage) => {
+              setPerPage(newPerPage);
+              setPage(1);
+            }}
+            highlightOnHover
+            responsive
+            striped
+            noDataComponent={
+              <div className="text-center p-5">
+                <p className="text-muted mb-0">
+                  No scans found. Start by scanning a URL above.
+                </p>
+              </div>
+            }
+          />
         </Card.Body>
       </Card>
     </div>

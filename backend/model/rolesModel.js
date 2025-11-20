@@ -31,8 +31,6 @@ const Role = sequelize.define(
 );
 
 //  Associations
-Role.hasMany(User, { foreignKey: "role_id" });
-User.belongsTo(Role, { foreignKey: "role_id" });
 
 Role.hasMany(RolePermission, { foreignKey: "role_id" });
 RolePermission.belongsTo(Role, { foreignKey: "role_id" });

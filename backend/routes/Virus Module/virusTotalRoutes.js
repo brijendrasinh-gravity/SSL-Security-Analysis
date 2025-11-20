@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 const VirusTotalController = require("../../controller/Virus Total/virusTotalController");
 const auth = require("../../middleware/authMiddleware");
-const { checkPermission } = require("../../middleware/checkPermissionMiddleware");
+const {
+  checkPermission,
+} = require("../../middleware/checkPermissionMiddleware");
 const checkBlockedIP = require("../../middleware/checkBlockedIPMiddleware");
 
 router.post(
@@ -48,11 +50,12 @@ router.delete(
   VirusTotalController.deleteScan
 );
 
-router.get(
+router.post(
   "/rescan/:id",
   auth,
-  checkPermission("virus_total", "canModify"),
-  VirusTotalController.reScan
+  checkPermission("virus_total", "canCreate"),
+  checkBlockedIP,
+  VirusTotalController.rescanURL
 );
 
 module.exports = router;

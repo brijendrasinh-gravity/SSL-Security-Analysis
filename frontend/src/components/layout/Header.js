@@ -39,8 +39,9 @@ function Header({ toggleSidebar }) {
 
   return (
     <header
-      className="bg-white border-bottom position-sticky top-0"
+      className="border-bottom position-sticky top-0"
       style={{
+        backgroundColor: "#e8e8ea",
         zIndex: 1020,
         height: "70px",
       }}

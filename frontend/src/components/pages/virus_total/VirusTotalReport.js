@@ -29,6 +29,7 @@ function VirusTotalReport() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [rescanLoading, setRescanLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("detection");
 
   useEffect(() => {
@@ -54,17 +55,19 @@ function VirusTotalReport() {
   };
 
   const handleRescan = async () => {
+    setRescanLoading(true);
     try {
-      setRefreshing(true);
-      const res = await API.get(`/virus/rescan/${id}`);
+      const res = await API.post(`/virus/rescan/${id}`);
+
       if (res.data.success) {
-        toast.success("URL rescanned successfully!");
-        setReport(res.data.data); // Update UI with fresh data
+        toast.success("Re-scan complete! Loading latest report...");
+        navigate(`/virus-total/report/${res.data.record_id}`);
       }
     } catch (error) {
-      toast.error("Failed to rescan URL");
+      console.error(error);
+      toast.error("Rescan failed!");
     } finally {
-      setRefreshing(false);
+      setRescanLoading(false);
     }
   };
 
@@ -103,6 +106,17 @@ function VirusTotalReport() {
     const categories = report?.attributes?.categories || {};
     return Object.entries(categories);
   };
+  
+  if (rescanLoading) {
+    return (
+      <div className="container mt-4">
+        <div className="text-center p-5">
+          <Spinner animation="border" variant="warning" size="lg" />
+          <p className="mt-3 fw-semibold">Re-scanning URL...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -155,12 +169,12 @@ function VirusTotalReport() {
             {refreshing ? " Refreshing..." : " Refresh"}
           </button>
           <button
-            className="btn btn-warning ms-2"
+            className="btn btn-warning"
             onClick={handleRescan}
-            disabled={refreshing}
+            disabled={rescanLoading}
           >
-            <RefreshCw size={18} className={refreshing ? "spin" : ""} />
-            Re-Scan
+            <RefreshCw size={18} className={rescanLoading ? "spin" : ""} />
+            {rescanLoading ? " Re-scanning..." : " Re-Scan"}
           </button>
           <button
             className="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"

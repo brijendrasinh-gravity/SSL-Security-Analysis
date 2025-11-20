@@ -1,6 +1,6 @@
 const axios = require("axios");
-const sequelize = require("../config/db");
-const Sslreports = require("../model/sslReportModel");
+const sequelize = require("../../config/db");
+const Sslreports = require("../../model/sslReportModel");
 
 const ssl_api = "https://api.ssllabs.com/api/v3/analyze";
 const certi_api = "https://crt.sh/?q=%25.";

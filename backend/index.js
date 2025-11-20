@@ -45,7 +45,7 @@ app.use('/virus', virusTotalRoutes);
 sequelize.authenticate()
   .then(() => {
     console.log('Database connected');
-    return sequelize.sync();
+    // return sequelize.sync();
   })  
   .catch(err => console.error('Database connection error:', err));
 
