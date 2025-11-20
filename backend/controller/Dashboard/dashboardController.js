@@ -3,75 +3,166 @@ const Users = require('../../model/userModel');
 const Virus = require('../../model/virusTotalModel');
 const SSLReports = require('../../model/sslReportModel');
 
-const getLast12Months = () => {
-  const months = [];
-  const d = new Date();
-  d.setDate(1); // start of month
-  for (let i = 11; i >= 0; i--) {
-    const tmp = new Date(d.getFullYear(), d.getMonth() - i, 1);
-    const yyyy = tmp.getFullYear();
-    const mm = String(tmp.getMonth() + 1).padStart(2, '0');
-    months.push(`${yyyy}-${mm}`);
+// Convert preset range → { from, to }
+const parseRangeToDates = (range) => {
+  const now = new Date();
+
+  if (!range || range === "all") {
+    return { from: null, to: null };
   }
-  return months;
+
+  if (range === "today") {
+    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const to = new Date(from);
+    to.setDate(to.getDate() + 1);
+    return { from, to };
+  }
+
+  if (range === "7d") {
+    const from = new Date(now);
+    from.setDate(from.getDate() - 6);
+    return { from, to: now };
+  }
+
+  if (range === "15d") {
+    const from = new Date(now);
+    from.setDate(from.getDate() - 14);
+    return { from, to: now };
+  }
+
+  if (range === "30d") {
+    const from = new Date(now);
+    from.setDate(from.getDate() - 29);
+    return { from, to: now };
+  }
+
+  if (range === "3m") {
+    const from = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    const to = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return { from, to };
+  }
+
+  if (range === "6m") {
+    const from = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const to = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return { from, to };
+  }
+
+  if (range === "year") {
+    const from = new Date(now.getFullYear(), 0, 1);
+    const to = new Date(now.getFullYear() + 1, 0, 1);
+    return { from, to };
+  }
+
+  return { from: null, to: null };
 };
 
-// Helper builds empty month objects
-const buildMonthBuckets = (months, keyName) =>
-  months.map((m) => ({ month: m, [keyName]: 0 }));
+// Build months between (YYYY-MM)
+const buildMonthsBetween = (from, to) => {
+  if (!from || !to) return [];
+  const result = [];
+
+  let d = new Date(from.getFullYear(), from.getMonth(), 1);
+  let end = new Date(to.getFullYear(), to.getMonth(), 1);
+
+  while (d <= end) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    result.push(`${y}-${m}`);
+    d.setMonth(d.getMonth() + 1);
+  }
+  return result;
+};
+
+const buildBucket = (months, key) => {
+  return months.map((m) => ({
+    month: m,
+    [key]: 0
+  }));
+};
+
+/* ---------------------------------------
+   🔹 FILTER PARSER (CUSTOM OR PRESET)
+----------------------------------------- */
+
+const getEffectiveRange = (query) => {
+  if (query.range === "custom") {
+    const from = query.from ? new Date(query.from) : null;
+    const to = query.to ? new Date(query.to) : null;
+    return { from, to };
+  }
+
+  return parseRangeToDates(query.range);
+};
+
+/* ---------------------------------------
+   🔹 USERS STATS
+----------------------------------------- */
 
 exports.userStats = async (req, res) => {
   try {
-    const months = getLast12Months();
+    const { from, to } = getEffectiveRange(req.query);
 
-    // Summary counts
-    const totalUsers = await Users.count({ where: {} });
+    let whereClause = {};
+    if (from && to) {
+      whereClause.createdAt = { [Sequelize.Op.between]: [from, to] };
+    }
 
-    // This month
+    // Months - if no range, use last 12 months
+    let months = [];
+    if (from && to) {
+      months = buildMonthsBetween(from, to);
+    } else {
+      // Default: last 12 months
+      const now = new Date();
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        months.push(`${y}-${m}`);
+      }
+    }
+
+    // Summary
+    const totalUsers = await Users.count({ where: whereClause });
+
+    // This month and last month for cards
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const newUsersThisMonth = await Users.count({
       where: {
-        createdAt: {
-          [Sequelize.Op.gte]: startOfMonth,
-          [Sequelize.Op.lt]: endOfMonth,
-        },
-      },
+        createdAt: { [Sequelize.Op.gte]: startOfMonth, [Sequelize.Op.lt]: endOfMonth }
+      }
     });
 
-    // Last month
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfLastMonth = startOfMonth;
     const newUsersLastMonth = await Users.count({
       where: {
-        createdAt: {
-          [Sequelize.Op.gte]: startOfLastMonth,
-          [Sequelize.Op.lt]: endOfLastMonth,
-        },
-      },
+        createdAt: { [Sequelize.Op.gte]: startOfLastMonth, [Sequelize.Op.lt]: endOfLastMonth }
+      }
     });
 
-    // Monthly new users (group by YYYY-MM)
-    const monthlyRaw = await Users.findAll({
+    // Monthly grouping
+    const raw = await Users.findAll({
       attributes: [
-        [Sequelize.fn('DATE_FORMAT', Sequelize.col('createdAt'), '%Y-%m'), 'month'],
-        [Sequelize.fn('COUNT', Sequelize.col('*')), 'count'],
+        [Sequelize.fn("DATE_FORMAT", Sequelize.col("createdAt"), "%Y-%m"), "month"],
+        [Sequelize.fn("COUNT", "*"), "count"],
       ],
-      where: {},
-      group: ['month'],
-      order: [[Sequelize.literal('month'), 'ASC']],
+      where: whereClause,
+      group: ["month"],
+      order: [[Sequelize.literal("month"), "ASC"]],
       raw: true,
     });
 
-    // Map results into last 12 months array
-    const monthly = buildMonthBuckets(months, 'newUsers');
-    monthlyRaw.forEach((r) => {
-      const found = monthly.find((m) => m.month === r.month);
-      if (found) found.newUsers = Number(r.count);
+    let monthly = buildBucket(months, "newUsers");
+    raw.forEach((r) => {
+      const f = monthly.find((m) => m.month === r.month);
+      if (f) f.newUsers = Number(r.count);
     });
 
-    return res.status(200).json({
+    res.json({
       success: true,
       data: {
         totalUsers,
@@ -80,61 +171,79 @@ exports.userStats = async (req, res) => {
         monthly,
       },
     });
-  } catch (error) {
-    console.error("Dashboard.userStats error:", error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+
+  } catch (err) {
+    console.error("User Stats Error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
+
+/* ---------------------------------------
+   🔹 VIRUS STATS
+----------------------------------------- */
+
 exports.virusStats = async (req, res) => {
   try {
-    const months = getLast12Months();
+    const { from, to } = getEffectiveRange(req.query);
 
-    const totalScans = await Virus.count({});
-    
-    // This month
+    let whereClause = {};
+    if (from && to) {
+      whereClause.createdAt = { [Sequelize.Op.between]: [from, to] };
+    }
+
+    // Months - if no range, use last 12 months
+    let months = [];
+    if (from && to) {
+      months = buildMonthsBetween(from, to);
+    } else {
+      const now = new Date();
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        months.push(`${y}-${m}`);
+      }
+    }
+
+    const totalScans = await Virus.count({ where: whereClause });
+
+    // This month and last month
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const scansThisMonth = await Virus.count({
       where: {
-        createdAt: {
-          [Sequelize.Op.gte]: startOfMonth,
-          [Sequelize.Op.lt]: endOfMonth,
-        },
-      },
+        createdAt: { [Sequelize.Op.gte]: startOfMonth, [Sequelize.Op.lt]: endOfMonth }
+      }
     });
 
-    // Last month
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfLastMonth = startOfMonth;
     const scansLastMonth = await Virus.count({
       where: {
-        createdAt: {
-          [Sequelize.Op.gte]: startOfLastMonth,
-          [Sequelize.Op.lt]: endOfLastMonth,
-        },
-      },
+        createdAt: { [Sequelize.Op.gte]: startOfLastMonth, [Sequelize.Op.lt]: endOfLastMonth }
+      }
     });
 
-    // Monthly scans grouped
-    const monthlyRaw = await Virus.findAll({
+    const raw = await Virus.findAll({
       attributes: [
-        [Sequelize.fn('DATE_FORMAT', Sequelize.col('createdAt'), '%Y-%m'), 'month'],
-        [Sequelize.fn('COUNT', Sequelize.col('*')), 'count'],
+        [Sequelize.fn("DATE_FORMAT", Sequelize.col("createdAt"), "%Y-%m"), "month"],
+        [Sequelize.fn("COUNT", "*"), "count"],
       ],
-      group: ['month'],
-      order: [[Sequelize.literal('month'), 'ASC']],
+      where: whereClause,
+      group: ["month"],
+      order: [[Sequelize.literal("month"), "ASC"]],
       raw: true,
     });
 
-    const monthly = buildMonthBuckets(months, 'scans');
-    monthlyRaw.forEach((r) => {
-      const found = monthly.find((m) => m.month === r.month);
-      if (found) found.scans = Number(r.count);
+    let monthly = buildBucket(months, "scans");
+    raw.forEach((r) => {
+      const f = monthly.find((m) => m.month === r.month);
+      if (f) f.scans = Number(r.count);
     });
 
-    return res.status(200).json({
+    res.json({
       success: true,
       data: {
         totalScans,
@@ -143,61 +252,79 @@ exports.virusStats = async (req, res) => {
         monthly,
       },
     });
-  } catch (error) {
-    console.error("Dashboard.virusStats error:", error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+
+  } catch (err) {
+    console.error("Virus Stats Error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
+
+/* ---------------------------------------
+   🔹 DOMAIN / SSL REPORT STATS
+----------------------------------------- */
+
 exports.domainStats = async (req, res) => {
   try {
-    const months = getLast12Months();
+    const { from, to } = getEffectiveRange(req.query);
 
-    const totalDomains = await SSLReports.count({});
-    
-    // This month
+    let whereClause = {};
+    if (from && to) {
+      whereClause.createdAt = { [Sequelize.Op.between]: [from, to] };
+    }
+
+    // Months - if no range, use last 12 months
+    let months = [];
+    if (from && to) {
+      months = buildMonthsBetween(from, to);
+    } else {
+      const now = new Date();
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        months.push(`${y}-${m}`);
+      }
+    }
+
+    const totalDomains = await SSLReports.count({ where: whereClause });
+
+    // This month and last month
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const domainsThisMonth = await SSLReports.count({
       where: {
-        createdAt: {
-          [Sequelize.Op.gte]: startOfMonth,
-          [Sequelize.Op.lt]: endOfMonth,
-        },
-      },
+        createdAt: { [Sequelize.Op.gte]: startOfMonth, [Sequelize.Op.lt]: endOfMonth }
+      }
     });
 
-    // Last month
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfLastMonth = startOfMonth;
     const domainsLastMonth = await SSLReports.count({
       where: {
-        createdAt: {
-          [Sequelize.Op.gte]: startOfLastMonth,
-          [Sequelize.Op.lt]: endOfLastMonth,
-        },
-      },
+        createdAt: { [Sequelize.Op.gte]: startOfLastMonth, [Sequelize.Op.lt]: endOfLastMonth }
+      }
     });
 
-    // Monthly scanned domains (grouped by report createdAt; counts rows)
-    const monthlyRaw = await SSLReports.findAll({
+    const raw = await SSLReports.findAll({
       attributes: [
-        [Sequelize.fn('DATE_FORMAT', Sequelize.col('createdAt'), '%Y-%m'), 'month'],
-        [Sequelize.fn('COUNT', Sequelize.col('*')), 'count'],
+        [Sequelize.fn("DATE_FORMAT", Sequelize.col("createdAt"), "%Y-%m"), "month"],
+        [Sequelize.fn("COUNT", "*"), "count"],
       ],
-      group: ['month'],
-      order: [[Sequelize.literal('month'), 'ASC']],
+      where: whereClause,
+      group: ["month"],
+      order: [[Sequelize.literal("month"), "ASC"]],
       raw: true,
     });
 
-    const monthly = buildMonthBuckets(months, 'domainsScanned');
-    monthlyRaw.forEach((r) => {
-      const found = monthly.find((m) => m.month === r.month);
-      if (found) found.domainsScanned = Number(r.count);
+    let monthly = buildBucket(months, "domainsScanned");
+    raw.forEach((r) => {
+      const f = monthly.find((m) => m.month === r.month);
+      if (f) f.domainsScanned = Number(r.count);
     });
 
-    return res.status(200).json({
+    res.json({
       success: true,
       data: {
         totalDomains,
@@ -206,8 +333,9 @@ exports.domainStats = async (req, res) => {
         monthly,
       },
     });
-  } catch (error) {
-    console.error("Dashboard.domainStats error:", error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+
+  } catch (err) {
+    console.error("Domain Stats Error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
