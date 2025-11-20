@@ -7,8 +7,10 @@ const auth = require("../../middleware/authMiddleware");
 const validateRequest = require("../../middleware/schemaValidation/validationMiddleare");
 const authSchema = require("../../schemas/sslCertiSchema");
 const upload = require("../../middleware/multer/multerMiddleware");
-const { checkPermission } = require("../../middleware/checkPermissionMiddleware");
-const checkBlockedIP = require('../../middleware/checkBlockedIPMiddleware');
+const {
+  checkPermission,
+} = require("../../middleware/checkPermissionMiddleware");
+const checkBlockedIP = require("../../middleware/checkBlockedIPMiddleware");
 
 // SSL Analysis and CRUD - Protected with RBAC
 router.post(
@@ -57,10 +59,23 @@ router.post(
   validateRequest(authSchema.loginSchema),
   authController.login
 );
-router.post("/changepassword", auth, checkBlockedIP , validateRequest(authSchema.changePasswordSchema) ,authController.changePassword);
+router.post(
+  "/changepassword",
+  auth,
+  checkBlockedIP,
+  validateRequest(authSchema.changePasswordSchema),
+  authController.changePassword
+);
 
 router.get("/profile", auth, checkBlockedIP, sslCrudController.getProfile);
-router.put("/updateprofile", auth, checkBlockedIP ,validateRequest(authSchema.updateProfileSchema),upload.single("profile_image") ,sslCrudController.updateProfile);
+router.put(
+  "/updateprofile",
+  auth,
+  checkBlockedIP,
+  validateRequest(authSchema.updateProfileSchema),
+  upload.single("profile_image"),
+  sslCrudController.updateProfile
+);
 
 //First Time Users API
 router.post(
@@ -76,8 +91,16 @@ router.post(
 );
 
 //OTP
-router.post("/forgotpassword", validateRequest(authSchema.forgotPasswordSchema) ,authController.forgotPasswordOTP);
+router.post(
+  "/forgotpassword",
+  validateRequest(authSchema.forgotPasswordSchema),
+  authController.forgotPasswordOTP
+);
 router.post("/verifyotp", authController.verifyOtp);
-router.post("/forgotresetpassword", validateRequest(authSchema.forgotResetPasswordSchema) ,authController.resetForgotPassword);
+router.post(
+  "/forgotresetpassword",
+  validateRequest(authSchema.forgotResetPasswordSchema),
+  authController.resetForgotPassword
+);
 
 module.exports = router;

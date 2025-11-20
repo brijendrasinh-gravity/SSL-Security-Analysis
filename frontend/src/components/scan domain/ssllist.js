@@ -219,7 +219,7 @@ function SslReportsAnalysis() {
         {hasPermission('ssl_security', 'canCreate') && (
           <Button 
             variant="primary"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/scan/new')}
             className="d-flex align-items-center"
           >
             <Plus size={18} className="me-2" />
@@ -240,13 +240,13 @@ function SslReportsAnalysis() {
                 <Shield size={40} className="text-muted" />
               </div>
               <h5 className="fw-bold mb-2">No SSL Reports Found</h5>
-              <p className="text-muted mb-4">Start by analyzing a domain from the Dashboard</p>
+              <p className="text-muted mb-4">Start by analyzing a domain to see your reports here</p>
               <Button 
                 variant="primary" 
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/scan/new')}
               >
                 <Plus size={18} className="me-2" />
-                Go to Dashboard
+                Scan New Domain
               </Button>
             </div>
           ) : (

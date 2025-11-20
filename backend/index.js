@@ -42,6 +42,9 @@ app.use('/settings', generalSettingRoutes);
 const virusTotalRoutes = require('./routes/Virus Module/virusTotalRoutes');
 app.use('/virus', virusTotalRoutes);
 
+const dashboardRoutes = require('./routes/dashboard Routes/dashboardRoutes');
+app.use('/dashboard', dashboardRoutes);
+
 sequelize.authenticate()
   .then(() => {
     console.log('Database connected');

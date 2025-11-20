@@ -1,6 +1,6 @@
 import { Nav, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Shield, User, ShieldAlert, Bug } from 'lucide-react';
+import { Shield, User, ShieldAlert, Bug, BarChart3 } from 'lucide-react';
 import { usePermission } from '../../hooks/usePermission';
 import sslLogo from '../../assets/images/ssl-logo.png';
 
@@ -11,10 +11,16 @@ function Sidebar({ isCollapsed }) {
   const allMenuItems = [
     {
       path: '/',
-      icon: Home,
-      label: 'Dashboard',
+      icon: Shield,
+      label: 'Scanned Domains',
       exact: true,
       moduleName: 'ssl_security'
+    },
+    {
+      path: '/dashboard',
+      icon: BarChart3,
+      label: 'Dashboard',
+      moduleName: 'dashboard_permission'
     },
     {
       path: '/user',
@@ -39,12 +45,6 @@ function Sidebar({ isCollapsed }) {
       icon: Bug,
       label: 'Virus Scanner',
       moduleName: 'virus_total'
-    },
-    {
-      path: '/scan',
-      icon: Shield,
-      label: 'Scanned Domains',
-      moduleName: 'ssl_security'
     }
   ];
 

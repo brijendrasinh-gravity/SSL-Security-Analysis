@@ -19,6 +19,7 @@ import EditRole from "../components/pages/role permission/edit_role";
 import BlockedIPManager from "../components/pages/blocked_ip/BlockedIPManager";
 import VirusTotalScanner from "../components/pages/virus_total/VirusTotalScanner";
 import VirusTotalReport from "../components/pages/virus_total/VirusTotalReport";
+import Dashboard from "../components/pages/dashboard/dashboard";
 import Profile from "../components/common/profile";
 import Settings from "../components/pages/settings/Settings";
 import BackButton from "../components/common/backbutton";
@@ -42,8 +43,8 @@ function AllRoutes() {
         path="/"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="ssl_security">
-              <SearchDomain />
+            <PermissionGuard moduleName="ssl_security" requiredPermission="canList">
+              <SslReportsAnalysis />
             </PermissionGuard>
           </ProtectedRoute>
         }
@@ -60,13 +61,23 @@ function AllRoutes() {
         }
       />
       <Route
+        path="/scan/new"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard moduleName="ssl_security" requiredPermission="canCreate">
+              <SearchDomain />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/scan/details/:id"
         element={
           <ProtectedRoute>
             <PermissionGuard moduleName="ssl_security" requiredPermission="canList">
               <SslReportDetails
                 backButton={
-                  <BackButton label="Back" to="/scan" variant="primary" />
+                  <BackButton label="Back" to="/" variant="primary" />
                 }
               />
             </PermissionGuard>
@@ -144,6 +155,17 @@ function AllRoutes() {
           <ProtectedRoute>
             <PermissionGuard moduleName="virus_total" requiredPermission="canList">
               <VirusTotalReport />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard moduleName="dashboard_permission" requiredPermission="canView">
+              <Dashboard />
             </PermissionGuard>
           </ProtectedRoute>
         }
