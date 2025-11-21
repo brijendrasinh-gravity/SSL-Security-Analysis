@@ -57,3 +57,50 @@ exports.updateSetting = async (req, res) => {
     });
   }
 };
+
+
+//limited IP access toggle
+exports.updateLimitedAccessStatus = async (req, res) => {
+  try {
+    const { enabled } = req.body; // expect true / false
+
+    if (typeof enabled !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "enabled must be boolean (true/false)"
+      });
+    }
+
+    // Find existing setting
+    const setting = await GeneralSetting.findOne({
+      where: { 
+        field_name: "IS_LIMITED_POWERPANEL_ENABLED",
+        cb_deleted: false 
+      }
+    });
+
+    if (setting) {
+      // Update existing record
+      await setting.update({ field_value: String(enabled) });
+    } else {
+      // Create new record if doesn't exist
+      await GeneralSetting.create({
+        field_name: "IS_LIMITED_POWERPANEL_ENABLED",
+        field_value: String(enabled),
+        cb_deleted: false,
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Limited access status updated",
+    });
+  } catch (error) {
+    console.error("updateLimitedAccessStatus error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};

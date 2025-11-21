@@ -8,7 +8,7 @@ const parseRangeToDates = (range) => {
   const now = new Date();
 
   if (!range || range === "all") {
-    return { from: null, to: null };
+    return { from: null, to: null };  
   }
 
   if (range === "today") {

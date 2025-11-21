@@ -5,12 +5,13 @@ import { toast } from "react-toastify";
 import { Trash2, Plus } from "lucide-react";
 
 function LimitedAccess() {
-  const [toggleOn, setToggleOn] = useState(false); 
+  const [isLimitedEnabled, setIsLimitedEnabled] = useState(false); 
   const [ipInput, setIpInput] = useState("");
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
+  // Load both settings on mount
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -21,17 +22,20 @@ function LimitedAccess() {
       const res = await API.get("/settings/get-settings");
       if (res.data.success) {
         const data = res.data.data || {};
-        let raw = data.LIMITED_POWERPANEL_ACCESS || "[]";
 
+        // Load whitelist
+        let raw = data.LIMITED_POWERPANEL_ACCESS || "[]";
         try {
           raw = JSON.parse(raw);
           if (!Array.isArray(raw)) raw = [];
         } catch {
           raw = String(raw).split(",").map(s => s.trim()).filter(Boolean);
         }
-
         setList(raw);
-        setToggleOn(raw.length > 0); // UI toggle reflects presence of items
+
+        // Load toggle state
+        const enabledRaw = data.IS_LIMITED_POWERPANEL_ENABLED || "false";
+        setIsLimitedEnabled(enabledRaw === "true");
       }
     } catch (err) {
       console.error("Error loading limited access:", err);
@@ -46,12 +50,13 @@ function LimitedAccess() {
     if (!ip) return toast.error("Enter a valid IP");
     if (list.includes(ip)) return toast.info("IP already exists");
 
-    const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    const ipv4Regex =
+      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
     if (!ipv4Regex.test(ip)) return toast.error("Enter a valid IPv4 address");
 
     setList(prev => [...prev, ip]);
     setIpInput("");
-    setToggleOn(true);
   };
 
   const removeIP = (ip) => {
@@ -61,16 +66,18 @@ function LimitedAccess() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      // If toggle is OFF -> we treat that as "no whitelist" => save empty array
-      const toSave = toggleOn ? list : [];
-
+      //  Save whitelist
       await API.put("/settings/update-setting", {
         field_name: "LIMITED_POWERPANEL_ACCESS",
-        field_value: JSON.stringify(toSave),
+        field_value: JSON.stringify(list),
       });
 
-      toast.success("Limited access settings saved");
-      setToggleOn(toSave.length > 0);
+      //  Save main toggle
+      await API.put("/settings/update-limitedipaccess-status", {
+        enabled: isLimitedEnabled,
+      });
+
+      toast.success("Limited access settings updated");
     } catch (err) {
       console.error("Error saving limited access:", err);
       toast.error("Failed to save limited access settings");
@@ -79,7 +86,6 @@ function LimitedAccess() {
     }
   };
 
-  // Quick UI: pressing Enter in input adds IP
   const onKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -91,12 +97,13 @@ function LimitedAccess() {
     <div>
       <div className="mb-4 d-flex justify-content-between align-items-center">
         <h5 className="fw-bold text-primary">Limited Powerpanel Access</h5>
+
         <Form.Check
           type="switch"
           id="limited-access-switch"
-          label={toggleOn ? "ON" : "OFF"}
-          checked={toggleOn}
-          onChange={() => setToggleOn(!toggleOn)}
+          label={isLimitedEnabled ? "ON" : "OFF"}
+          checked={isLimitedEnabled}
+          onChange={() => setIsLimitedEnabled(!isLimitedEnabled)}
         />
       </div>
 
@@ -118,20 +125,27 @@ function LimitedAccess() {
                   </Button>
                 </InputGroup>
                 <Form.Text className="text-muted">
-                  Toggle ON to enable limited access. To disable, toggle OFF and Save.
+                  Toggle ON to enable limited access. Toggle OFF to disable restrictions.
                 </Form.Text>
               </Form.Group>
 
               <ListGroup className="mb-3">
-                {list.length === 0 && <ListGroup.Item className="text-muted">No IPs added</ListGroup.Item>}
+                {list.length === 0 && (
+                  <ListGroup.Item className="text-muted">No IPs added</ListGroup.Item>
+                )}
                 {list.map((ip) => (
-                  <ListGroup.Item key={ip} className="d-flex justify-content-between align-items-center">
-                    <div><strong>{ip}</strong></div>
-                    <div>
-                      <Button variant="outline-danger" size="sm" onClick={() => removeIP(ip)}>
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
+                  <ListGroup.Item
+                    key={ip}
+                    className="d-flex justify-content-between align-items-center"
+                  >
+                    <strong>{ip}</strong>
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => removeIP(ip)}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
                   </ListGroup.Item>
                 ))}
               </ListGroup>
@@ -155,10 +169,18 @@ function LimitedAccess() {
             </Card.Header>
             <Card.Body>
               <ol className="mb-0 ps-3">
-                <li className="mb-2">Toggle ON then Save to enable limited access (only listed IPs allowed).</li>
-                <li className="mb-2">Toggle OFF then Save to disable limited access for everyone.</li>
-                <li className="mb-2">Only the IP list is stored in DB; no boolean flag is stored.</li>
-                <li className="mb-0">If you enable without adding your own IP, you may lock yourself out.</li>
+                <li className="mb-2">
+                  Toggle <strong>ON</strong> then Save → Only listed IPs can access.
+                </li>
+                <li className="mb-2">
+                  Toggle <strong>OFF</strong> then Save → Everyone can access (whitelist ignored).
+                </li>
+                <li className="mb-2">
+                  Whitelist entries are stored in <code>LIMITED_POWERPANEL_ACCESS</code>.
+                </li>
+                <li className="mb-0">
+                  Toggle state stored in <code>IS_LIMITED_POWERPANEL_ENABLED</code>.
+                </li>
               </ol>
             </Card.Body>
           </Card>

@@ -1,60 +1,77 @@
 const GeneralSetting = require("../model/generalSettingModel");
 const { getClientIP } = require('../utils/ipChecker');
 
+let cache = { whitelist: null, isEnabled: null, lastFetched: 0 };
+const CACHE_TTL_MS = 10 * 1000; // 10s cache
 
-
-let cache = { whitelist: null, lastFetched: 0 };
-const CACHE_TTL_MS = 10 * 1000; // 10s, adjust if needed
-
-async function loadWhitelist() {
+async function loadSettings() {
   const now = Date.now();
+
+  // If cache not expired, return cached settings
   if (cache.lastFetched && now - cache.lastFetched < CACHE_TTL_MS) {
-    return cache.whitelist;
+    return {
+      whitelist: cache.whitelist,
+      isEnabled: cache.isEnabled
+    };
   }
 
+  let whitelist = [];
+  let isEnabled = false;
+
   try {
+    // Load ENABLE FLAG
+    const enabledSetting = await GeneralSetting.findOne({
+      where: { field_name: "IS_LIMITED_POWERPANEL_ENABLED", cb_deleted: false },
+    });
+
+    if (enabledSetting) {
+      isEnabled = enabledSetting.field_value === "true";
+    }
+
+    // Load WHITELIST
     const listSetting = await GeneralSetting.findOne({
       where: { field_name: "LIMITED_POWERPANEL_ACCESS", cb_deleted: false },
     });
 
-    let whitelist = [];
-    if (listSetting && listSetting.field_value) {
+    if (listSetting?.field_value) {
       try {
-        // Expecting JSON array string
         whitelist = JSON.parse(listSetting.field_value);
         if (!Array.isArray(whitelist)) whitelist = [];
-      } catch (err) {
-        // Fallback: comma separated
+      } catch {
         whitelist = String(listSetting.field_value)
           .split(",")
-          .map((s) => s.trim())
+          .map(s => s.trim())
           .filter(Boolean);
       }
     }
 
-    cache = { whitelist, lastFetched: now };
-    return whitelist;
-  } catch (err) {
-    console.error("Error loading LIMITED_POWERPANEL_ACCESS:", err);
-    // On error return empty (no restriction), but you can change to throw to be stricter
-    return [];
+    cache = { whitelist, isEnabled, lastFetched: now };
+    return { whitelist, isEnabled };
+  } catch (error) {
+    console.error("Error loading general settings:", error);
+    return { whitelist: [], isEnabled: false };
   }
 }
 
 module.exports = async function limitedAccessMiddleware(req, res, next) {
   try {
-    const whitelist = await loadWhitelist();
+    const { whitelist, isEnabled } = await loadSettings();
 
-    // If whitelist is empty => feature is effectively OFF
-    if (!whitelist || !Array.isArray(whitelist) || whitelist.length === 0) {
+    // CASE 1 — FEATURE DISABLED → allow all
+    if (!isEnabled) {
       return next();
     }
 
-    // Determine client IP (reuse your util which prefers external IP but falls back)
+    // CASE 2 — FEATURE ENABLED but whitelist empty → allow all
+    if (!whitelist || whitelist.length === 0) {
+      return next();
+    }
+
+    // Determine client IP
     let clientIP;
     try {
       clientIP = await getClientIP(req);
-    } catch (err) {
+    } catch {
       clientIP =
         req.headers["x-forwarded-for"]?.split(",")[0] ||
         req.connection?.remoteAddress ||
@@ -64,7 +81,6 @@ module.exports = async function limitedAccessMiddleware(req, res, next) {
     }
 
     if (!clientIP) {
-      // If we cannot determine IP, block safe default
       return res.status(403).json({
         success: false,
         message: "Access denied. Unable to determine client IP.",
@@ -73,22 +89,20 @@ module.exports = async function limitedAccessMiddleware(req, res, next) {
 
     if (clientIP.startsWith("::ffff:")) clientIP = clientIP.substring(7);
 
-    // Normalize whitelist strings
-    const normalized = whitelist.map((i) => String(i).trim());
+    // Normalize whitelist
+    const normalized = whitelist.map(i => String(i).trim());
 
     if (normalized.includes(clientIP)) {
       return next();
     }
 
-    // Not whitelisted -> block
     return res.status(403).json({
       success: false,
       message: "Access denied. Your IP is not allowed to access this system.",
     });
-  } catch (error) {
-    console.error("limitedAccessMiddleware error:", error);
-    // Fail-safe: allow or block? We choose to allow here to avoid service outage on middleware failure.
-    // If you prefer safety-first, respond with 500/403 instead.
-    return next();
+
+  } catch (err) {
+    console.error("limitedAccessMiddleware error:", err);
+    return next(); // fail-safe
   }
 };

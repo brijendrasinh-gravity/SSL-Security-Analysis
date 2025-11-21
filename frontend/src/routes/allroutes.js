@@ -43,8 +43,19 @@ function AllRoutes() {
         path="/"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="ssl_security" requiredPermission="canList">
-              <SslReportsAnalysis />
+            <PermissionGuard moduleName="dashboard_permission" requiredPermission="canView">
+              <Dashboard />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard moduleName="dashboard_permission" requiredPermission="canView">
+              <Dashboard />
             </PermissionGuard>
           </ProtectedRoute>
         }

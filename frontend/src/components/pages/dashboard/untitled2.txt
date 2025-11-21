@@ -1,0 +1,68 @@
+[
+    {
+        "h": 4,
+        "i": "statUsers",
+        "w": 4,
+        "x": 4,
+        "y": 0,
+        "minH": 4,
+        "minW": 3,
+        "moved": false,
+        "static": false
+    },
+    {
+        "h": 4,
+        "i": "statVirus",
+        "w": 4,
+        "x": 8,
+        "y": 0,
+        "minH": 4,
+        "minW": 3,
+        "moved": false,
+        "static": false
+    },
+    {
+        "h": 4,
+        "i": "statDomains",
+        "w": 4,
+        "x": 0,
+        "y": 0,
+        "minH": 4,
+        "minW": 3,
+        "moved": false,
+        "static": false
+    },
+    {
+        "h": 10,
+        "i": "chartUsers",
+        "w": 6,
+        "x": 6,
+        "y": 4,
+        "minH": 8,
+        "minW": 4,
+        "moved": false,
+        "static": false
+    },
+    {
+        "h": 10,
+        "i": "chartVirus",
+        "w": 6,
+        "x": 0,
+        "y": 14,
+        "minH": 8,
+        "minW": 4,
+        "moved": false,
+        "static": false
+    },
+    {
+        "h": 10,
+        "i": "chartDomains",
+        "w": 6,
+        "x": 0,
+        "y": 4,
+        "minH": 8,
+        "minW": 4,
+        "moved": false,
+        "static": false
+    }
+]

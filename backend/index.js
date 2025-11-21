@@ -13,6 +13,7 @@ require('./model/blockedipModel');
 require('./model/generalSettingModel');
 require('./model/virusTotalModel');
 require('./model/virusTotalModel');
+require('./model/dashboardModel');
 
 app.use(cors())
 app.use(express.json());

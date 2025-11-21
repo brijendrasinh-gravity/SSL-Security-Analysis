@@ -11,16 +11,16 @@ function Sidebar({ isCollapsed }) {
   const allMenuItems = [
     {
       path: '/',
-      icon: Shield,
-      label: 'Scanned Domains',
-      exact: true,
-      moduleName: 'ssl_security'
-    },
-    {
-      path: '/dashboard',
       icon: BarChart3,
       label: 'Dashboard',
+      exact: true,
       moduleName: 'dashboard_permission'
+    },
+    {
+      path: '/scan',
+      icon: Shield,
+      label: 'SSL Security',
+      moduleName: 'ssl_security'
     },
     {
       path: '/user',
