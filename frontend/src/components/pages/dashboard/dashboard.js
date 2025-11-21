@@ -221,7 +221,7 @@ function Dashboard() {
   });
 
   useEffect(() => {
-    if (!hasPermission("dashboard_permission", "canView")) {
+    if (!hasPermission("dashboard", "canList")) {
       setLoading(false);
       return;
     }
@@ -268,7 +268,7 @@ function Dashboard() {
     }
   };
 
-  if (!hasPermission("dashboard_permission", "canView")) {
+  if (!hasPermission("dashboard", "canList")) {
     return (
       <div className="container mt-4">
         <h4>You don't have permission.</h4>
@@ -546,7 +546,7 @@ function Dashboard() {
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
           <div>
             <h1 className="dashboard-title">Dashboard</h1>
-            <p className="dashboard-subtitle mb-0">Overview statistics & trends (Drag to rearrange)</p>
+            <p className="dashboard-subtitle mb-0">Overview statistics & trends</p>
           </div>
 
           <div className="d-flex gap-2 align-items-center flex-wrap">
@@ -601,7 +601,7 @@ function Dashboard() {
         </div>
 
         <div key="statVirus" className="grid-item">
-          <div className="drag-handle">⋮⋮</div>
+          <div className="drag-handle">⋮⋮ </div>
           <StatCard
             title="VirusTotal Scans"
             value={virusStats?.totalScans ?? 0}

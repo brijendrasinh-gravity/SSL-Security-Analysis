@@ -43,7 +43,7 @@ function AllRoutes() {
         path="/"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="dashboard_permission" requiredPermission="canView">
+            <PermissionGuard moduleName="dashboard">
               <Dashboard />
             </PermissionGuard>
           </ProtectedRoute>
@@ -54,7 +54,7 @@ function AllRoutes() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="dashboard_permission" requiredPermission="canView">
+            <PermissionGuard moduleName="dashboard">
               <Dashboard />
             </PermissionGuard>
           </ProtectedRoute>
@@ -175,7 +175,7 @@ function AllRoutes() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="dashboard_permission" requiredPermission="canView">
+            <PermissionGuard moduleName="dashboard" >
               <Dashboard />
             </PermissionGuard>
           </ProtectedRoute>
