@@ -12,45 +12,56 @@ const parseRangeToDates = (range) => {
   }
 
   if (range === "today") {
-    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const to = new Date(from);
-    to.setDate(to.getDate() + 1);
+    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const to = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     return { from, to };
   }
 
   if (range === "7d") {
     const from = new Date(now);
     from.setDate(from.getDate() - 6);
-    return { from, to: now };
+    from.setHours(0, 0, 0, 0);
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
+    return { from, to };
   }
 
   if (range === "15d") {
     const from = new Date(now);
     from.setDate(from.getDate() - 14);
-    return { from, to: now };
+    from.setHours(0, 0, 0, 0);
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
+    return { from, to };
   }
 
   if (range === "30d") {
     const from = new Date(now);
     from.setDate(from.getDate() - 29);
-    return { from, to: now };
+    from.setHours(0, 0, 0, 0);
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
+    return { from, to };
   }
 
   if (range === "3m") {
-    const from = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-    const to = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const from = new Date(now.getFullYear(), now.getMonth() - 2, 1, 0, 0, 0, 0);
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
     return { from, to };
   }
 
   if (range === "6m") {
-    const from = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-    const to = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const from = new Date(now.getFullYear(), now.getMonth() - 5, 1, 0, 0, 0, 0);
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
     return { from, to };
   }
 
   if (range === "year") {
-    const from = new Date(now.getFullYear(), 0, 1);
-    const to = new Date(now.getFullYear() + 1, 0, 1);
+    const from = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
     return { from, to };
   }
 
@@ -87,12 +98,21 @@ const buildBucket = (months, key) => {
 
 const getEffectiveRange = (query) => {
   if (query.range === "custom") {
-    const from = query.from ? new Date(query.from) : null;
-    const to = query.to ? new Date(query.to) : null;
+    let from = query.from ? new Date(query.from) : null;
+    let to = query.to ? new Date(query.to) : null;
+    
+    // Set time to start and end of day for custom ranges
+    if (from) {
+      from.setHours(0, 0, 0, 0);
+    }
+    if (to) {
+      to.setHours(23, 59, 59, 999);
+    }
+    
     return { from, to };
   }
 
-  return parseRangeToDates(query.range);
+  return parseRangeToDates(query.range || "all");
 };
 
 /* ---------------------------------------
