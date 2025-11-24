@@ -43,9 +43,7 @@ function AllRoutes() {
         path="/"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="dashboard">
-              <Dashboard />
-            </PermissionGuard>
+            <Dashboard />
           </ProtectedRoute>
         }
       />
@@ -54,9 +52,7 @@ function AllRoutes() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="dashboard">
-              <Dashboard />
-            </PermissionGuard>
+            <Dashboard />
           </ProtectedRoute>
         }
       />
@@ -166,17 +162,6 @@ function AllRoutes() {
           <ProtectedRoute>
             <PermissionGuard moduleName="virus_total" requiredPermission="canList">
               <VirusTotalReport />
-            </PermissionGuard>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <PermissionGuard moduleName="dashboard" >
-              <Dashboard />
             </PermissionGuard>
           </ProtectedRoute>
         }

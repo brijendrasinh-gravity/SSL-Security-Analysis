@@ -14,7 +14,7 @@ function Sidebar({ isCollapsed }) {
       icon: BarChart3,
       label: 'Dashboard',
       exact: true,
-      moduleName: 'dashboard_permission'
+      moduleName: null // No permission required - accessible to all logged-in users
     },
     {
       path: '/scan',
@@ -48,8 +48,8 @@ function Sidebar({ isCollapsed }) {
     }
   ];
 
-  // Filter menu items based on user permissions
-  const menuItems = allMenuItems.filter(item => hasAnyPermission(item.moduleName));
+  // Filter menu items based on user permissions (Dashboard has no permission requirement)
+  const menuItems = allMenuItems.filter(item => !item.moduleName || hasAnyPermission(item.moduleName));
 
   return (
     <div 

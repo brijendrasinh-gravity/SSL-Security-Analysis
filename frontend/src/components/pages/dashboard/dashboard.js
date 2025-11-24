@@ -23,7 +23,6 @@ import {
   Filter,
 } from "lucide-react";
 import API from "../../../api/api";
-import { usePermission } from "../../../hooks/usePermission";
 import "./dashboard.css";
 
 const StatCard = ({
@@ -119,8 +118,6 @@ const StatCard = ({
 };
 
 function Dashboard() {
-  const { hasPermission } = usePermission();
-
   const [loading, setLoading] = useState(true);
 
   const [userStats, setUserStats] = useState(null);
@@ -221,10 +218,6 @@ function Dashboard() {
   });
 
   useEffect(() => {
-    if (!hasPermission("dashboard", "canList")) {
-      setLoading(false);
-      return;
-    }
     fetchAll();
   }, []);
 
@@ -267,14 +260,6 @@ function Dashboard() {
       setLoading(false);
     }
   };
-
-  if (!hasPermission("dashboard", "canList")) {
-    return (
-      <div className="container mt-4">
-        <h4>You don't have permission.</h4>
-      </div>
-    );
-  }
 
   if (loading || !layout) {
     return (
