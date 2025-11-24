@@ -1,4 +1,3 @@
-// src/components/pages/dashboard/dashboard.js
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, Spinner, Button, Form } from "react-bootstrap";
 import GridLayout from "react-grid-layout";
@@ -29,9 +28,6 @@ import {
 import API from "../../../api/api";
 import "./dashboard.css";
 
-/* --------------------------------------------
-   Small Spinner (Used for filtering updates only)
-   -------------------------------------------- */
 const SmallSpinner = () => (
   <Spinner
     animation="border"
@@ -40,9 +36,6 @@ const SmallSpinner = () => (
   />
 );
 
-/* --------------------------------------------
-   StatCard (Memoized)
-   -------------------------------------------- */
 const StatCard = React.memo(
   ({ title, value, thisMonth, lastMonth, icon: Icon, iconBg }) => {
     let percentageChange = 0;
@@ -99,7 +92,6 @@ const StatCard = React.memo(
                     </span>
                   )}
 
-                {/* From zero to positive */}
                 {(!lastMonth || lastMonth === 0) && thisMonth > 0 && (
                   <span className="trend-badge badge bg-success d-flex align-items-center gap-1">
                     <TrendingUp size={14} /> 100%
@@ -136,9 +128,6 @@ const StatCard = React.memo(
   }
 );
 
-/* --------------------------------------------
-   Filter UI Component (No apply(), no setTimeout())
-   -------------------------------------------- */
 const FilterUI = ({ filter, setFilter, showReset = true }) => {
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -270,9 +259,7 @@ const FilterUI = ({ filter, setFilter, showReset = true }) => {
     </div>
   );
 };
-/* --------------------------------------------
-   Chart Components (Memoized)
-   -------------------------------------------- */
+
 const UsersChart = React.memo(
   ({ data, loading, formatMonth, FilterComponent }) => (
     <div className="chart-card border-0 h-100">
@@ -387,9 +374,6 @@ const DomainsChart = React.memo(
   )
 );
 
-/* --------------------------------------------
-   Main Dashboard Component
-   -------------------------------------------- */
 function Dashboard() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
@@ -409,9 +393,6 @@ function Dashboard() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  /* --------------------------------------------
-     Default layout
-     -------------------------------------------- */
   const defaultLayout = useMemo(
     () => [
       { i: "statUsers", x: 0, y: 0, w: 4, h: 4 },
@@ -424,9 +405,6 @@ function Dashboard() {
     []
   );
 
-  /* --------------------------------------------
-     Filters
-     -------------------------------------------- */
   const [globalFilter, setGlobalFilter] = useState({
     range: "all",
     from: "",
@@ -448,9 +426,6 @@ function Dashboard() {
     to: "",
   });
 
-  /* --------------------------------------------
-     Build params based on filter
-     -------------------------------------------- */
   const buildParams = useCallback((filter) => {
     if (!filter) return { range: "all" };
     if (filter.range === "custom") {
@@ -462,9 +437,6 @@ function Dashboard() {
     return { range: filter.range };
   }, []);
 
-  /* --------------------------------------------
-     Fetch all stats
-     -------------------------------------------- */
   const fetchAll = useCallback(
     async ({ initial = false } = {}) => {
       try {
@@ -497,9 +469,6 @@ function Dashboard() {
     [globalFilter, userFilter, virusFilter, domainFilter, buildParams]
   );
 
-  /* --------------------------------------------
-     Initial layout + data load
-     -------------------------------------------- */
   useEffect(() => {
     let mounted = true;
 
@@ -534,16 +503,10 @@ function Dashboard() {
     };
   }, [userId, defaultLayout, fetchAll]);
 
-  /* --------------------------------------------
-     Filters auto-fetch on change
-     -------------------------------------------- */
   useEffect(() => {
     if (!initialLoading) fetchAll();
   }, [globalFilter, userFilter, virusFilter, domainFilter, fetchAll, initialLoading]);
 
-  /* --------------------------------------------
-     Layout editing
-     -------------------------------------------- */
   const handleLayoutChange = (newLayout) => {
     if (!isEditMode) return;
     setLayout(newLayout);
@@ -580,9 +543,6 @@ function Dashboard() {
     }
   };
 
-  /* --------------------------------------------
-     Formatting helper
-     -------------------------------------------- */
   const formatMonth = useCallback((ym) => {
     const [y, m] = ym.split("-");
     return new Date(Number(y), Number(m) - 1).toLocaleString("default", {
@@ -591,9 +551,6 @@ function Dashboard() {
     });
   }, []);
 
-  /* --------------------------------------------
-     All filter UIs (useMemo at top — correct order)
-     -------------------------------------------- */
   const globalFilterUI = useMemo(
     () => <FilterUI filter={globalFilter} setFilter={setGlobalFilter} showReset={false} />,
     [globalFilter]
@@ -611,10 +568,6 @@ function Dashboard() {
     [domainFilter]
   );
 
-  /* --------------------------------------------
-     Early return (Loader)
-     MUST come AFTER all hooks
-     -------------------------------------------- */
   if (initialLoading || !layout) {
     return (
       <div className="loading-container">
@@ -624,9 +577,6 @@ function Dashboard() {
     );
   }
 
-  /* --------------------------------------------
-     Reset all filters
-     -------------------------------------------- */
   const resetAll = () => {
     const reset = { range: "all", from: "", to: "" };
     setGlobalFilter(reset);
@@ -635,9 +585,6 @@ function Dashboard() {
     setDomainFilter(reset);
   };
 
-  /* --------------------------------------------
-     MAIN UI
-     -------------------------------------------- */
   return (
     <div className="container mt-4 mb-5">
       {/* Header */}
