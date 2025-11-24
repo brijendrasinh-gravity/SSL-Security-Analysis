@@ -21,6 +21,9 @@ import {
   TrendingUp,
   TrendingDown,
   Filter,
+  Edit3,
+  Save,
+  X,
 } from "lucide-react";
 import API from "../../../api/api";
 import "./dashboard.css";
@@ -130,6 +133,9 @@ function Dashboard() {
   // GRID LAYOUT STATE
   const [layout, setLayout] = useState(null);
   const [containerWidth, setContainerWidth] = useState(1200);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Default layout if DB doesn't have any
   const defaultLayout = [
@@ -173,27 +179,51 @@ function Dashboard() {
     }
   }
 
-  // SAVE LAYOUT (debounced)
-  let saveTimer;
+  // HANDLE LAYOUT CHANGE (only mark as unsaved, don't auto-save)
   const handleLayoutChange = (newLayout) => {
     setLayout(newLayout);
-
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      saveLayoutToDB(newLayout);
-    }, 800);
+    setHasUnsavedChanges(true);
   };
 
-  async function saveLayoutToDB(updatedLayout) {
+  // SAVE LAYOUT TO DATABASE
+  async function saveLayoutToDB() {
     try {
-      await API.post("/dashboard/save-layout", {
+      setIsSaving(true);
+      const response = await API.post("/dashboard/save-layout", {
         user_id: userId,
-        layout: updatedLayout,
+        layout: layout,
       });
+      
+      if (response.data.success) {
+        setHasUnsavedChanges(false);
+        // Optional: Show success message
+        console.log("Layout saved successfully!");
+      }
     } catch (error) {
-      console.log("Error saving layout:", error);
+      console.error("Error saving layout:", error);
+      // Optional: Show error message
+    } finally {
+      setIsSaving(false);
     }
   }
+
+  // TOGGLE EDIT MODE
+  const toggleEditMode = () => {
+    if (isEditMode && hasUnsavedChanges) {
+      // Warn user about unsaved changes
+      const confirmDiscard = window.confirm(
+        "You have unsaved changes. Do you want to discard them?"
+      );
+      if (confirmDiscard) {
+        // Reload layout from database
+        loadUserLayout();
+        setIsEditMode(false);
+        setHasUnsavedChanges(false);
+      }
+    } else {
+      setIsEditMode(!isEditMode);
+    }
+  };
 
   // FETCH FILTERED DATA (your existing logic)
   const [globalFilter, setGlobalFilter] = useState({
@@ -531,28 +561,73 @@ function Dashboard() {
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
           <div>
             <h1 className="dashboard-title">Dashboard</h1>
-            <p className="dashboard-subtitle mb-0">Overview statistics & trends</p>
+            <p className="dashboard-subtitle mb-0">
+              {isEditMode 
+                ? "Edit Mode: Drag widgets to rearrange" 
+                : "Overview statistics & trends"}
+            </p>
           </div>
 
           <div className="d-flex gap-2 align-items-center flex-wrap">
-            <FilterUI
-              filter={globalFilter}
-              setFilter={setGlobalFilter}
-              apply={fetchAll}
-              showReset={false}
-            />
-            {(globalFilter.range !== "all" || 
-              userFilter.range !== "all" || 
-              virusFilter.range !== "all" || 
-              domainFilter.range !== "all") && (
-              <Button 
-                size="sm" 
-                className="reset-all-btn d-flex align-items-center justify-content-center"
-                onClick={resetAll}
-                title="Reset all filters"
+            {/* Edit Mode Toggle */}
+            <Button
+              size="sm"
+              variant={isEditMode ? "warning" : "outline-light"}
+              className="d-flex align-items-center gap-2"
+              onClick={toggleEditMode}
+              title={isEditMode ? "Exit Edit Mode" : "Enter Edit Mode"}
+            >
+              {isEditMode ? (
+                <>
+                  <X size={16} />
+                  <span>Exit Edit</span>
+                </>
+              ) : (
+                <>
+                  <Edit3 size={16} />
+                  <span>Edit Layout</span>
+                </>
+              )}
+            </Button>
+
+            {/* Save Button (only visible in edit mode with changes) */}
+            {isEditMode && hasUnsavedChanges && (
+              <Button
+                size="sm"
+                variant="success"
+                className="d-flex align-items-center gap-2"
+                onClick={saveLayoutToDB}
+                disabled={isSaving}
+                title="Save Layout"
               >
-                <RotateCcw size={16} />
+                <Save size={16} />
+                <span>{isSaving ? "Saving..." : "Save Layout"}</span>
               </Button>
+            )}
+
+            {/* Filters (only visible when not in edit mode) */}
+            {!isEditMode && (
+              <>
+                <FilterUI
+                  filter={globalFilter}
+                  setFilter={setGlobalFilter}
+                  apply={fetchAll}
+                  showReset={false}
+                />
+                {(globalFilter.range !== "all" || 
+                  userFilter.range !== "all" || 
+                  virusFilter.range !== "all" || 
+                  domainFilter.range !== "all") && (
+                  <Button 
+                    size="sm" 
+                    className="reset-all-btn d-flex align-items-center justify-content-center"
+                    onClick={resetAll}
+                    title="Reset all filters"
+                  >
+                    <RotateCcw size={16} />
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -567,14 +642,14 @@ function Dashboard() {
         width={containerWidth}
         onLayoutChange={handleLayoutChange}
         draggableHandle=".drag-handle"
-        isDraggable={true}
-        isResizable={true}
+        isDraggable={isEditMode}
+        isResizable={isEditMode}
         compactType="vertical"
       >
         {/* 6 WIDGETS AS GRID ITEMS */}
 
-        <div key="statUsers" className="grid-item">
-          <div className="drag-handle">⋮⋮</div>
+        <div key="statUsers" className={`grid-item ${isEditMode ? 'edit-mode' : ''}`}>
+          {isEditMode && <div className="drag-handle">⋮⋮</div>}
           <StatCard
             title="Total Users"
             value={userStats?.totalUsers ?? 0}
@@ -585,8 +660,8 @@ function Dashboard() {
           />
         </div>
 
-        <div key="statVirus" className="grid-item">
-          <div className="drag-handle">⋮⋮ </div>
+        <div key="statVirus" className={`grid-item ${isEditMode ? 'edit-mode' : ''}`}>
+          {isEditMode && <div className="drag-handle">⋮⋮</div>}
           <StatCard
             title="VirusTotal Scans"
             value={virusStats?.totalScans ?? 0}
@@ -597,8 +672,8 @@ function Dashboard() {
           />
         </div>
 
-        <div key="statDomains" className="grid-item">
-          <div className="drag-handle">⋮⋮</div>
+        <div key="statDomains" className={`grid-item ${isEditMode ? 'edit-mode' : ''}`}>
+          {isEditMode && <div className="drag-handle">⋮⋮</div>}
           <StatCard
             title="Domains Scanned"
             value={domainStats?.totalDomains ?? 0}
@@ -609,18 +684,18 @@ function Dashboard() {
           />
         </div>
 
-        <div key="chartUsers" className="grid-item">
-          <div className="drag-handle">⋮⋮</div>
+        <div key="chartUsers" className={`grid-item ${isEditMode ? 'edit-mode' : ''}`}>
+          {isEditMode && <div className="drag-handle">⋮⋮</div>}
           {UsersChart()}
         </div>
 
-        <div key="chartVirus" className="grid-item">
-          <div className="drag-handle">⋮⋮</div>
+        <div key="chartVirus" className={`grid-item ${isEditMode ? 'edit-mode' : ''}`}>
+          {isEditMode && <div className="drag-handle">⋮⋮</div>}
           {VirusChart()}
         </div>
 
-        <div key="chartDomains" className="grid-item">
-          <div className="drag-handle">⋮⋮</div>
+        <div key="chartDomains" className={`grid-item ${isEditMode ? 'edit-mode' : ''}`}>
+          {isEditMode && <div className="drag-handle">⋮⋮</div>}
           {DomainsChart()}
         </div>
       </GridLayout>
