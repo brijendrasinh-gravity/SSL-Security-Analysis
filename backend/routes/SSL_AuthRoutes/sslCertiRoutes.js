@@ -21,6 +21,14 @@ router.post(
   sslCertiController.securityAnalysis
 );
 
+router.post(
+  "/rescan/:id",
+  auth,
+  checkBlockedIP,
+  checkPermission("ssl_security", "canCreate"),
+  sslCrudController.rescanReport
+);
+
 router.get(
   "/getbulkreport",
   auth,

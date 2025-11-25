@@ -76,6 +76,22 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    api_limit_enabled: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    daily_limit: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    api_used_today: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    api_last_used_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     timestamps: true,

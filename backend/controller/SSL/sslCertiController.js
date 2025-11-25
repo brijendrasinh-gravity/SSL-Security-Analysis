@@ -55,19 +55,6 @@ exports.securityAnalysis = async (req, res) => {
       }
     }
 
-    // let certiData = [];
-    // try {
-    //   const certiAPI = `${certi_api}${encodeURIComponent(trimmedDomain)}&output=json`;
-    //   const c = await axios.get(certiAPI, { timeout: 20000 });
-
-    //   certiData = Array.isArray(c.data) ? c.data : { raw: c.data };
-    // } catch (err) {
-    //   certiData = {
-    //     error: "Faild to fetch API",
-    //     message: err.message,
-    //   };
-    // }
-
     let certiData = [];
     try {
       const certiAPI = `${certi_api}${encodeURIComponent(
