@@ -18,6 +18,7 @@ import {
   Trash2,
   ToggleLeft,
   ToggleRight,
+  UserCog,
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -44,6 +45,10 @@ function UserManager() {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewUserId, setViewUserId] = useState(null);
+
+  // Check if logged-in user is admin
+  const loggedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isLoggedInUserAdmin = loggedUser?.role?.is_Admin === true;
 
   // Fetch roles
   const fetchRoles = async () => {
@@ -148,15 +153,27 @@ function UserManager() {
       name: "Status",
       cell: (row) => (
         <div
-          onClick={hasPermission('user', 'canModify') ? () => handleToggleStatus(row.id) : undefined}
-          style={{ cursor: hasPermission('user', 'canModify') ? "pointer" : "default" }}
+          onClick={
+            hasPermission("user", "canModify")
+              ? () => handleToggleStatus(row.id)
+              : undefined
+          }
+          style={{
+            cursor: hasPermission("user", "canModify") ? "pointer" : "default",
+          }}
         >
           {row.status ? (
-            <span className="badge bg-success d-flex align-items-center gap-1" style={{transition:"none"}}>
+            <span
+              className="badge bg-success d-flex align-items-center gap-1"
+              style={{ transition: "none" }}
+            >
               <ToggleRight size={16} /> Active
             </span>
           ) : (
-            <span className="badge bg-secondary d-flex align-items-center gap-1" style={{transition:"none"}}>
+            <span
+              className="badge bg-secondary d-flex align-items-center gap-1"
+              style={{ transition: "none" }}
+            >
               <ToggleLeft size={16} /> Inactive
             </span>
           )}
@@ -167,7 +184,24 @@ function UserManager() {
       name: "Action",
       cell: (row) => (
         <div className="d-flex gap-3 justify-content-center">
-          {hasPermission('user', 'canModify') && (
+          {/* Account Settings (Admin Only) - Show for non-admin users */}
+          {isLoggedInUserAdmin && row.role?.is_Admin === false && (
+            <OverlayTrigger
+              placement="top"
+              overlay={<Tooltip>Account Setting</Tooltip>}
+            >
+              <Button
+                variant="link"
+                className="p-0 text-info"
+                onClick={() =>
+                  (window.location.href = `/user/account-setting/${row.id}`)
+                }
+              >
+                <UserCog size={18} />
+              </Button>
+            </OverlayTrigger>
+          )}
+          {hasPermission("user", "canModify") && (
             <OverlayTrigger placement="top" overlay={<Tooltip>Edit</Tooltip>}>
               <Button
                 variant="link"
@@ -182,7 +216,7 @@ function UserManager() {
             </OverlayTrigger>
           )}
 
-          {hasPermission('user', 'canDelete') && (
+          {hasPermission("user", "canDelete") && (
             <OverlayTrigger placement="top" overlay={<Tooltip>Delete</Tooltip>}>
               <Button
                 variant="link"
@@ -195,7 +229,9 @@ function UserManager() {
           )}
         </div>
       ),
-      omit: !hasPermission('user', 'canModify') && !hasPermission('user', 'canDelete'),
+      omit:
+        !hasPermission("user", "canModify") &&
+        !hasPermission("user", "canDelete"),
     },
   ];
 
@@ -212,7 +248,7 @@ function UserManager() {
         </div>
 
         <div className="d-flex align-items-center gap-2">
-          {hasPermission('user', 'canList') && (
+          {hasPermission("user", "canList") && (
             <Button
               variant={showFilter ? "primary" : "outline-secondary"}
               className="rounded-circle d-flex align-items-center justify-content-center"
@@ -224,7 +260,7 @@ function UserManager() {
             </Button>
           )}
 
-          {hasPermission('user', 'canCreate') && (
+          {hasPermission("user", "canCreate") && (
             <Button
               variant="primary"
               className="rounded-circle d-flex align-items-center justify-content-center"

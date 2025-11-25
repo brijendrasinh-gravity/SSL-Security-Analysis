@@ -10,13 +10,15 @@ import {
   Collapse,
   OverlayTrigger,
   Tooltip,
+  Alert,
 } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { Shield, Search, Clock, Trash2, Eye, Filter, Plus } from "lucide-react";
+import { Shield, Search, Clock, Trash2, Eye, Filter, Plus, AlertCircle } from "lucide-react";
 import API from "../../../api/api";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { usePermission } from "../../../hooks/usePermission";
+import { useApiLimit } from "../../../hooks/useApiLimit";
 
 function VirusTotalScanner() {
   const [url, setUrl] = useState("");
@@ -30,6 +32,7 @@ function VirusTotalScanner() {
   const [perPage, setPerPage] = useState(10);
   const navigate = useNavigate();
   const { hasPermission } = usePermission();
+  const { isLimitReached, isLimitEnabled, usedToday, dailyLimit, remainingCalls, loading: limitLoading, refetch: refetchLimit } = useApiLimit();
 
   useEffect(() => {
     fetchHistory();
@@ -56,8 +59,16 @@ function VirusTotalScanner() {
 
   const handleScan = async (e) => {
     e.preventDefault();
+    
     if (!url.trim()) {
       toast.error("Please enter a URL");
+      return;
+    }
+
+    if (isLimitReached) {
+      toast.error("Daily API limit reached. Please try again tomorrow or contact your administrator.", {
+        autoClose: 5000,
+      });
       return;
     }
 
@@ -68,10 +79,20 @@ function VirusTotalScanner() {
         toast.success("URL submitted for analysis!");
         setUrl("");
         fetchHistory();
+        refetchLimit(); // Refresh limit info after successful scan
       }
     } catch (error) {
       console.error("Error scanning URL:", error);
-      toast.error(error.response?.data?.message || "Failed to scan URL");
+      
+      // Check if error is due to API limit
+      if (error.response?.status === 429) {
+        toast.error(error.response?.data?.message || "Daily API limit reached. Try again tomorrow.", {
+          autoClose: 5000,
+        });
+        refetchLimit(); // Refresh limit info
+      } else {
+        toast.error(error.response?.data?.message || "Failed to scan URL");
+      }
     } finally {
       setScanning(false);
     }
@@ -211,10 +232,31 @@ function VirusTotalScanner() {
       {hasPermission("virus_total", "canCreate") && (
         <Card className="shadow-sm border-0 mb-4">
           <Card.Body className="p-4">
-            <div className="d-flex align-items-center gap-2 mb-3">
-              <Search size={20} className="text-primary" />
-              <h5 className="fw-bold mb-0">Scan New URL</h5>
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <div className="d-flex align-items-center gap-2">
+                <Search size={20} className="text-primary" />
+                <h5 className="fw-bold mb-0">Scan New URL</h5>
+              </div>
+              {isLimitEnabled && !limitLoading && (
+                <Badge bg={isLimitReached ? "danger" : remainingCalls <= 5 ? "warning" : "success"}>
+                  {isLimitReached 
+                    ? "Limit Reached" 
+                    : `${remainingCalls} scan${remainingCalls !== 1 ? 's' : ''} remaining`
+                  }
+                </Badge>
+              )}
             </div>
+
+            {isLimitReached && (
+              <Alert variant="danger" className="d-flex align-items-center gap-2 mb-3">
+                <AlertCircle size={20} />
+                <div>
+                  <strong>Daily limit reached!</strong> You've used {usedToday} of {dailyLimit} scans today. 
+                  Please try again tomorrow or contact your administrator to increase your limit.
+                </div>
+              </Alert>
+            )}
+
             <Form onSubmit={handleScan}>
               <Row className="align-items-end g-3">
                 <Col md={10}>
@@ -227,6 +269,7 @@ function VirusTotalScanner() {
                       onChange={(e) => setUrl(e.target.value)}
                       size="lg"
                       required
+                      disabled={isLimitReached}
                     />
                     <Form.Text className="text-muted">
                       Enter a complete URL including http:// or https://
@@ -235,7 +278,13 @@ function VirusTotalScanner() {
                 </Col>
                 <Col md={2}>
                   <div className="d-grid">
-                    <Button type="submit" variant="primary" size="lg" disabled={scanning}>
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      size="lg" 
+                      disabled={scanning || isLimitReached}
+                      title={isLimitReached ? "Daily API limit reached" : "Scan URL"}
+                    >
                       {scanning ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />

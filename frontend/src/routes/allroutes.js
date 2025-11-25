@@ -23,6 +23,7 @@ import Dashboard from "../components/pages/dashboard/dashboard";
 import Profile from "../components/common/profile";
 import Settings from "../components/pages/settings/Settings";
 import BackButton from "../components/common/backbutton";
+import AccountSetting from "../components/pages/user/userAccountSetting";
 
 function AllRoutes() {
   return (
@@ -61,7 +62,10 @@ function AllRoutes() {
         path="/scan"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="ssl_security" requiredPermission="canList">
+            <PermissionGuard
+              moduleName="ssl_security"
+              requiredPermission="canList"
+            >
               <SslReportsAnalysis />
             </PermissionGuard>
           </ProtectedRoute>
@@ -71,7 +75,10 @@ function AllRoutes() {
         path="/scan/new"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="ssl_security" requiredPermission="canCreate">
+            <PermissionGuard
+              moduleName="ssl_security"
+              requiredPermission="canCreate"
+            >
               <SearchDomain />
             </PermissionGuard>
           </ProtectedRoute>
@@ -81,7 +88,10 @@ function AllRoutes() {
         path="/scan/details/:id"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="ssl_security" requiredPermission="canList">
+            <PermissionGuard
+              moduleName="ssl_security"
+              requiredPermission="canList"
+            >
               <SslReportDetails
                 backButton={
                   <BackButton label="Back" to="/" variant="primary" />
@@ -107,7 +117,10 @@ function AllRoutes() {
         path="/role"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="role_permission" requiredPermission="canList">
+            <PermissionGuard
+              moduleName="role_permission"
+              requiredPermission="canList"
+            >
               <RoleManager />
             </PermissionGuard>
           </ProtectedRoute>
@@ -117,7 +130,10 @@ function AllRoutes() {
         path="/role/add"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="role_permission" requiredPermission="canCreate">
+            <PermissionGuard
+              moduleName="role_permission"
+              requiredPermission="canCreate"
+            >
               <AddRole />
             </PermissionGuard>
           </ProtectedRoute>
@@ -127,7 +143,10 @@ function AllRoutes() {
         path="/role/edit/:id"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="role_permission" requiredPermission="canModify">
+            <PermissionGuard
+              moduleName="role_permission"
+              requiredPermission="canModify"
+            >
               <EditRole />
             </PermissionGuard>
           </ProtectedRoute>
@@ -138,7 +157,10 @@ function AllRoutes() {
         path="/blocked-ip"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="blocked_ip" requiredPermission="canList">
+            <PermissionGuard
+              moduleName="blocked_ip"
+              requiredPermission="canList"
+            >
               <BlockedIPManager />
             </PermissionGuard>
           </ProtectedRoute>
@@ -149,7 +171,10 @@ function AllRoutes() {
         path="/virus-total"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="virus_total" requiredPermission="canList">
+            <PermissionGuard
+              moduleName="virus_total"
+              requiredPermission="canList"
+            >
               <VirusTotalScanner />
             </PermissionGuard>
           </ProtectedRoute>
@@ -160,7 +185,10 @@ function AllRoutes() {
         path="/virus-total/report/:id"
         element={
           <ProtectedRoute>
-            <PermissionGuard moduleName="virus_total" requiredPermission="canList">
+            <PermissionGuard
+              moduleName="virus_total"
+              requiredPermission="canList"
+            >
               <VirusTotalReport />
             </PermissionGuard>
           </ProtectedRoute>
@@ -188,6 +216,14 @@ function AllRoutes() {
         element={
           <ProtectedRoute>
             <ChangePassword />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user/account-setting/:id"
+        element={
+          <ProtectedRoute>
+            <AccountSetting />
           </ProtectedRoute>
         }
       />

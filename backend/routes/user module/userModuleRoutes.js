@@ -64,4 +64,25 @@ router.patch(
   userController.toggleUserStatus
 );
 
+router.get('/account-setting/:id',
+  auth,
+  checkBlockedIP,
+  checkPermission("user","canList"),
+  userController.getAccountSetting
+);
+
+router.put("/account-setting/:id", 
+  auth, 
+  checkBlockedIP, 
+  checkPermission("user","canModify"),
+  userController.updateAccountSetting
+);
+
+router.patch("/reset-api-usage/:id",
+  auth,
+  checkBlockedIP,
+  checkPermission("user","canModify"),
+  userController.resetApiUsage
+);
+
 module.exports = router;

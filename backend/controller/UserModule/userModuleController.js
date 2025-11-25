@@ -160,8 +160,7 @@ exports.getAllUsers = async (req, res) => {
 
     const { count, rows } = await User.findAndCountAll({
       where: whereClause,
-    //   {cb_deleted:false},
-      include: [{ model: Role, attributes: ["id", "name"] }],
+      include: [{ model: Role, attributes: ["id", "name", "is_Admin"] }],
       attributes: ["id", "user_name", "email", "phone_number", "status"],
       limit: parseInt(limit),
       offset: parseInt(offset),
@@ -328,6 +327,146 @@ exports.toggleUserStatus = async (req, res) => {
       success: false,
       message: "Error toggling user status.",
       error: error.message,
+    });
+  }
+};
+
+exports.getAccountSetting = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByPk(id, {
+      attributes: [
+        "id",
+        "user_name",
+        "email",
+        "api_limit_enabled",
+        "daily_limit",
+        "api_used_today",
+        "api_last_used_date"
+      ],
+      include: [
+        {
+          model: Role,
+          attributes: ["id", "name", "is_Admin"]
+        }
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Account setting fetched successfully",
+      data: user
+    });
+
+  } catch (err) {
+    console.error("Get Account Setting Error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching account setting",
+      error: err.message
+    });
+  }
+};
+
+exports.updateAccountSetting = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const loggedInUserId = req.user.user_id;
+
+    // Fetch logged in user to check role
+    const loggedInUser = await User.findByPk(loggedInUserId, {
+      include: [{ model: Role }]
+    });
+
+    if (!loggedInUser || !loggedInUser.role || !loggedInUser.role.is_Admin) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to update account settings"
+      });
+    }
+
+    const { api_limit_enabled, daily_limit } = req.body;
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    user.api_limit_enabled = api_limit_enabled;
+    user.daily_limit = api_limit_enabled ? daily_limit : 0;
+
+    // Reset usage when limit changes (recommended)
+    if (api_limit_enabled === false) {
+      user.api_used_today = 0;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Account setting updated successfully",
+      data: user
+    });
+
+  } catch (err) {
+    console.error("Update Account Setting Error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating account setting",
+      error: err.message
+    });
+  }
+};
+
+exports.resetApiUsage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const loggedInUserId = req.user.user_id;
+
+    // Fetch logged in user to check role
+    const loggedInUser = await User.findByPk(loggedInUserId, {
+      include: [{ model: Role }]
+    });
+
+    if (!loggedInUser || !loggedInUser.role || !loggedInUser.role.is_Admin) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to reset API usage"
+      });
+    }
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    user.api_used_today = 0;
+    user.api_last_used_date = new Date();
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "API usage count reset successfully",
+      data: {
+        id: user.id,
+        api_used_today: user.api_used_today,
+        api_last_used_date: user.api_last_used_date
+      }
+    });
+
+  } catch (err) {
+    console.error("Reset API Usage Error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error while resetting API usage",
+      error: err.message
     });
   }
 };

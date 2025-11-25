@@ -1,23 +1,36 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/api";
-import { Button, Card, Form, Spinner, Row, Col, Alert } from "react-bootstrap";
-import { Search, Shield, Clock, CheckCircle, Zap, FileText, ArrowLeft, List } from "lucide-react";
+import { Button, Card, Form, Spinner, Row, Col, Alert, Badge } from "react-bootstrap";
+import { Search, Shield, Clock, CheckCircle, Zap, FileText, ArrowLeft, AlertCircle } from "lucide-react";
 import { usePermission } from "../../hooks/usePermission";
+import { useApiLimit } from "../../hooks/useApiLimit";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function SearchDomain() {
   const [domain, setDomain] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const { hasPermission } = usePermission();
+  const { isLimitReached, isLimitEnabled, usedToday, dailyLimit, remainingCalls, loading: limitLoading, refetch: refetchLimit } = useApiLimit();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!domain.trim()) {
-      alert("Please enter a domain");
+      toast.error("Please enter a domain");
       return;
     }
+
+    if (isLimitReached) {
+      toast.error("Daily API limit reached. Please try again tomorrow or contact your administrator.", {
+        autoClose: 5000,
+      });
+      return;
+    }
+
     setLoading(true);
     setResult(null);
 
@@ -31,8 +44,19 @@ function SearchDomain() {
       console.log(domain, "save in localstorage history")
 
       console.log(res.data?.crtsh);
+      refetchLimit(); // Refresh limit info after successful scan
     } catch (err) {
       console.error("error fetching analysis", err);
+      
+      // Check if error is due to API limit
+      if (err.response?.status === 429) {
+        toast.error(err.response?.data?.message || "Daily API limit reached. Try again tomorrow.", {
+          autoClose: 5000,
+        });
+        refetchLimit(); // Refresh limit info
+      } else {
+        toast.error(err.response?.data?.message || "Failed to analyze domain");
+      }
     } finally {
       setLoading(false);
     }
@@ -40,34 +64,49 @@ function SearchDomain() {
 
   return (
     <div className="container" style={{ maxWidth: "1200px" }}>
+      <ToastContainer />
+      
       {/* Page Header */}
       <div className="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded shadow-sm">
-        <div>
-          <h4 className="fw-bold mb-0 text-primary">SSL Security Dashboard</h4>
-          <small className="text-muted">Analyze SSL certificates and security configurations for any domain</small>
+        <div className="flex-grow-1">
+          <div className="d-flex align-items-center justify-content-between">
+            <div>
+              <h4 className="fw-bold mb-0 text-primary">SSL Security Dashboard</h4>
+              <small className="text-muted">Analyze SSL certificates and security configurations for any domain</small>
+            </div>
+            {isLimitEnabled && !limitLoading && (
+              <Badge bg={isLimitReached ? "danger" : remainingCalls <= 5 ? "warning" : "success"} className="px-3 py-2">
+                {isLimitReached 
+                  ? "Limit Reached" 
+                  : `${remainingCalls} scan${remainingCalls !== 1 ? 's' : ''} remaining`
+                }
+              </Badge>
+            )}
+          </div>
         </div>
-        <div className="d-flex gap-2">
-          {hasPermission('ssl_security', 'canList') && (
-            <Button
-              variant="outline-primary"
-              onClick={() => navigate('/')}
-              className="d-flex align-items-center"
-            >
-              <List size={18} className="me-2" />
-              View All Scans
-            </Button>
-          )}
+        <div className="d-flex gap-2 ms-3">
           <Button
             variant="outline-secondary"
             className="rounded-circle d-flex align-items-center justify-content-center"
             style={{ width: "40px", height: "40px" }}
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/scan')}
             title="Back to List"
           >
             <ArrowLeft size={18} />
           </Button>
         </div>
       </div>
+
+      {/* API Limit Warning */}
+      {isLimitReached && (
+        <Alert variant="danger" className="d-flex align-items-center gap-2 mb-4">
+          <AlertCircle size={20} />
+          <div>
+            <strong>Daily limit reached!</strong> You've used {usedToday} of {dailyLimit} scans today. 
+            Please try again tomorrow or contact your administrator to increase your limit.
+          </div>
+        </Alert>
+      )}
 
       {/* Main Search Card */}
       <Row className="justify-content-center mb-4">
@@ -87,7 +126,7 @@ function SearchDomain() {
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
                     size="lg"
-                    disabled={loading}
+                    disabled={loading || isLimitReached}
                     aria-label="Domain name input"
                     aria-required="true"
                   />
@@ -101,10 +140,11 @@ function SearchDomain() {
                     <Button 
                       type="submit" 
                       variant="primary" 
-                      disabled={loading || !domain.trim()}
+                      disabled={loading || !domain.trim() || isLimitReached}
                       size="lg"
                       className="fw-semibold"
                       aria-label={loading ? "Analyzing SSL certificate" : "Analyze SSL certificate"}
+                      title={isLimitReached ? "Daily API limit reached" : "Analyze SSL certificate"}
                     >
                       {loading ? (
                         <>

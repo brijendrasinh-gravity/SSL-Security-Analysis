@@ -11,12 +11,14 @@ const {
   checkPermission,
 } = require("../../middleware/checkPermissionMiddleware");
 const checkBlockedIP = require("../../middleware/checkBlockedIPMiddleware");
+const checkApiLimit = require("../../middleware/checkApiLimitMiddleware");
 
 // SSL Analysis and CRUD - Protected with RBAC
 router.post(
   "/security",
   auth,
   checkBlockedIP,
+  checkApiLimit,
   checkPermission("ssl_security", "canCreate"),
   sslCertiController.securityAnalysis
 );
@@ -25,6 +27,7 @@ router.post(
   "/rescan/:id",
   auth,
   checkBlockedIP,
+  checkApiLimit,
   checkPermission("ssl_security", "canCreate"),
   sslCrudController.rescanReport
 );

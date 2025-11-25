@@ -6,12 +6,14 @@ const {
   checkPermission,
 } = require("../../middleware/checkPermissionMiddleware");
 const checkBlockedIP = require("../../middleware/checkBlockedIPMiddleware");
+const checkApiLimit = require('../../middleware/checkApiLimitMiddleware');
 
 router.post(
   "/scan-url",
   auth,
   checkPermission("virus_total", "canCreate"),
   checkBlockedIP,
+  checkApiLimit,
   VirusTotalController.scanURL
 );
 
@@ -55,6 +57,7 @@ router.post(
   auth,
   checkPermission("virus_total", "canCreate"),
   checkBlockedIP,
+  checkApiLimit,
   VirusTotalController.rescanURL
 );
 

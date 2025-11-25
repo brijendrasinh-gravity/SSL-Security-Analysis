@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
-import { Button, Spinner, Card, Badge } from "react-bootstrap";
+import { Button, Spinner, Card, Badge, OverlayTrigger, Tooltip, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { Eye, Trash2, Shield, Globe, Plus } from "lucide-react";
+import { Eye, Trash2, Shield, Globe, Plus, AlertCircle } from "lucide-react";
 import API from "../../api/api";
 import { usePermission } from "../../hooks/usePermission";
+import { useApiLimit } from "../../hooks/useApiLimit";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function SslReportsAnalysis() {
   const [reports, setReports] = useState([]);
@@ -15,6 +18,7 @@ function SslReportsAnalysis() {
 
   const navigate = useNavigate();
   const { hasPermission } = usePermission();
+  const { isLimitReached, isLimitEnabled, usedToday, dailyLimit, remainingCalls, loading: limitLoading } = useApiLimit();
 
   useEffect(() => {
     // eslint-disable-next-line
@@ -60,6 +64,17 @@ function SslReportsAnalysis() {
   const handlePerRowsChange = (newPerPage, page) => {
     setPerPage(newPerPage);
     setPage(page);
+  };
+
+  const handleNewScanClick = () => {
+    if (isLimitReached) {
+      toast.error(
+        `Daily API limit reached! You've used ${usedToday} of ${dailyLimit} scans today. Please try again tomorrow or contact your administrator.`,
+        { autoClose: 5000 }
+      );
+      return;
+    }
+    navigate('/scan/new');
   };
 
 
@@ -201,6 +216,8 @@ function SslReportsAnalysis() {
 
   return (
     <div className="container" style={{ maxWidth: "1200px" }}>
+      <ToastContainer />
+      
       {/* Page Header */}
       <div className="text-center mb-4">
         <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
@@ -210,21 +227,57 @@ function SslReportsAnalysis() {
         <p className="text-muted">View and manage your SSL certificate analysis reports</p>
       </div>
 
+      {/* API Limit Warning */}
+      {isLimitReached && hasPermission('ssl_security', 'canCreate') && (
+        <Alert variant="danger" className="d-flex align-items-center gap-2 mb-4">
+          <AlertCircle size={20} />
+          <div>
+            <strong>Daily limit reached!</strong> You've used {usedToday} of {dailyLimit} scans today. 
+            Please try again tomorrow or contact your administrator to increase your limit.
+          </div>
+        </Alert>
+      )}
+
       {/* Stats and Action Bar */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <span className="text-muted">Total Reports: </span>
-          <span className="fw-bold fs-5">{totalRows}</span>
+        <div className="d-flex align-items-center gap-3">
+          <div>
+            <span className="text-muted">Total Reports: </span>
+            <span className="fw-bold fs-5">{totalRows}</span>
+          </div>
+          {isLimitEnabled && !limitLoading && hasPermission('ssl_security', 'canCreate') && (
+            <Badge bg={isLimitReached ? "danger" : remainingCalls <= 5 ? "warning" : "success"} className="px-3 py-2">
+              {isLimitReached 
+                ? "Limit Reached" 
+                : `${remainingCalls} scan${remainingCalls !== 1 ? 's' : ''} remaining`
+              }
+            </Badge>
+          )}
         </div>
         {hasPermission('ssl_security', 'canCreate') && (
-          <Button 
-            variant="primary"
-            onClick={() => navigate('/scan/new')}
-            className="d-flex align-items-center"
+          <OverlayTrigger
+            placement="top"
+            overlay={
+              <Tooltip>
+                {isLimitReached 
+                  ? "Daily API limit reached. Try again tomorrow." 
+                  : "Scan a new domain"
+                }
+              </Tooltip>
+            }
           >
-            <Plus size={18} className="me-2" />
-            New Scan
-          </Button>
+            <span>
+              <Button 
+                variant="primary"
+                onClick={handleNewScanClick}
+                className="d-flex align-items-center"
+                disabled={isLimitReached}
+              >
+                <Plus size={18} className="me-2" />
+                New Scan
+              </Button>
+            </span>
+          </OverlayTrigger>
         )}
       </div>
 
@@ -241,13 +294,16 @@ function SslReportsAnalysis() {
               </div>
               <h5 className="fw-bold mb-2">No SSL Reports Found</h5>
               <p className="text-muted mb-4">Start by analyzing a domain to see your reports here</p>
-              <Button 
-                variant="primary" 
-                onClick={() => navigate('/scan/new')}
-              >
-                <Plus size={18} className="me-2" />
-                Scan New Domain
-              </Button>
+              {hasPermission('ssl_security', 'canCreate') && (
+                <Button 
+                  variant="primary" 
+                  onClick={handleNewScanClick}
+                  disabled={isLimitReached}
+                >
+                  <Plus size={18} className="me-2" />
+                  Scan New Domain
+                </Button>
+              )}
             </div>
           ) : (
             <DataTable
